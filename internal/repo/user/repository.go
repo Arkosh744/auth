@@ -17,6 +17,7 @@ type Repository interface {
 	Get(ctx context.Context, username string) (user *model.User, err error)
 	ExistsName(ctx context.Context, username string) (exists bool, err error)
 	ExistsEmail(ctx context.Context, email string) (exists bool, err error)
+	Update(ctx context.Context, username string, user *model.User) error
 }
 
 type repository struct {
@@ -86,4 +87,40 @@ func (r *repository) Get(ctx context.Context, username string) (user *model.User
 	}
 
 	return user, nil
+}
+
+func (r *repository) Update(ctx context.Context, username string, user *model.User) error {
+	builder := sq.Update(tableName).
+		PlaceholderFormat(sq.Dollar).
+		Set("updated_at", user.UpdatedAt).
+		Where("username = ?", username).
+		Where("deleted_at IS NULL")
+
+	if user.Username != "" {
+		builder = builder.Set("username", user.Username)
+	}
+
+	if user.Email != "" {
+		builder = builder.Set("email", user.Email)
+	}
+
+	if user.Password != "" {
+		builder = builder.Set("password", user.Password)
+	}
+
+	if user.Role != "" {
+		builder = builder.Set("role", user.Role)
+	}
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.pool.Exec(ctx, query, v...)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

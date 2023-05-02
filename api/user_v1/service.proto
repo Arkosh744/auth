@@ -46,8 +46,6 @@ message UpdateRequest {
   google.protobuf.StringValue new_email = 3;
   google.protobuf.StringValue new_password = 4;
   google.protobuf.StringValue new_role = 5;
-
-  google.protobuf.Timestamp updated_at = 6;
 }
 
 message UpdateResponse {

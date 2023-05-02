@@ -12,9 +12,9 @@ import (
 )
 
 func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
-	response, err := validateRequest(req)
+	err := validateCreateRequest(req)
 	if err != nil {
-		return response, status.Errorf(codes.InvalidArgument, "Request validation failed: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "Request validation failed: %v", err)
 	}
 
 	user, err := converter.ToUser(req)
@@ -35,21 +35,22 @@ func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*
 	return &desc.CreateResponse{}, nil
 }
 
-func validateRequest(req *desc.CreateRequest) (*desc.CreateResponse, error) {
-	if !validator.IsPasswordValid(req.Password) {
-		return nil, fmt.Errorf(ErrNotValidPassword)
+func validateCreateRequest(req *desc.CreateRequest) error {
+	if !validator.IsPasswordValid(req.GetPassword()) {
+		return fmt.Errorf(ErrNotValidPassword)
 	}
 
-	if !validator.IsPasswordConfirmed(req.Password, req.PasswordConfirm) {
-		return nil, fmt.Errorf(ErrPasswordConfirmation)
+	if !validator.IsPasswordConfirmed(req.GetPassword(), req.GetPasswordConfirm()) {
+		return fmt.Errorf(ErrPasswordConfirmation)
 	}
 
-	if !validator.IsValidEmail(req.Email) {
-		return nil, fmt.Errorf(ErrNotValidEmail)
+	if !validator.IsValidEmail(req.GetEmail()) {
+		return fmt.Errorf(ErrNotValidEmail)
 	}
 
-	if !validator.IsUsernameValid(req.Username) {
-		return nil, fmt.Errorf(ErrNotValidUsername)
+	if !validator.IsUsernameValid(req.GetUsername()) {
+		return fmt.Errorf(ErrNotValidUsername)
 	}
-	return nil, nil
+
+	return nil
 }

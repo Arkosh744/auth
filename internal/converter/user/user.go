@@ -34,6 +34,31 @@ func ToUser(user *desc.CreateRequest) (*model.User, error) {
 	}, nil
 }
 
+func ToUpdateUser(req *desc.UpdateRequest) (user *model.User, err error) {
+	user = &model.User{}
+
+	if req.GetNewRole() != nil {
+		user.Role, err = ToUserRole(req.GetNewRole().GetValue())
+		if err != nil {
+			return user, err
+		}
+	}
+
+	if req.GetNewUsername() != nil {
+		user.Username = req.GetNewUsername().GetValue()
+	}
+
+	if req.GetNewEmail() != nil {
+		user.Email = req.GetNewEmail().GetValue()
+	}
+
+	if req.GetNewPassword() != nil {
+		user.Password = req.GetNewPassword().GetValue()
+	}
+
+	return user, err
+}
+
 func ToGetResponse(user *model.User) *desc.GetResponse {
 	return &desc.GetResponse{
 		Username:  user.Username,

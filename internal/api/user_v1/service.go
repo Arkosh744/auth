@@ -8,11 +8,11 @@ import (
 type Implementation struct {
 	desc.UnimplementedUserServer
 
-	noteService user.Service
+	userService user.Service
 }
 
 func NewImplementation(noteService user.Service) *Implementation {
 	return &Implementation{
-		noteService: noteService,
+		userService: noteService,
 	}
 }

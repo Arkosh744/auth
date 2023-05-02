@@ -3,6 +3,7 @@ module github.com/Arkosh744/auth-grpc
 go 1.20
 
 require (
+	github.com/Masterminds/squirrel v1.5.4
 	github.com/golang/protobuf v1.5.3
 	github.com/jackc/pgx/v4 v4.18.1
 	google.golang.org/grpc v1.54.0
@@ -10,7 +11,6 @@ require (
 )
 
 require (
-	github.com/Masterminds/squirrel v1.5.4 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgconn v1.14.0 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect

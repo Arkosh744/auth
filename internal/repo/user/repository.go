@@ -14,6 +14,7 @@ const tableName = "users"
 
 type Repository interface {
 	Create(context.Context, *model.User) error
+	Get(ctx context.Context, username string) (user *model.User, err error)
 	ExistsName(ctx context.Context, username string) (exists bool, err error)
 	ExistsEmail(ctx context.Context, email string) (exists bool, err error)
 }
@@ -63,4 +64,26 @@ func (r *repository) ExistsEmail(ctx context.Context, email string) (exists bool
 	}
 
 	return exists, nil
+}
+
+func (r *repository) Get(ctx context.Context, username string) (user *model.User, err error) {
+	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at").
+		From(tableName).
+		Where("username = ?", username).
+		Where("deleted_at IS NULL").
+		PlaceholderFormat(sq.Dollar)
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	user = &model.User{}
+	err = r.pool.QueryRow(ctx, query, v...).
+		Scan(&user.Username, &user.Email, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
 }

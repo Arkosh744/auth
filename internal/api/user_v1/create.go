@@ -22,7 +22,7 @@ func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*
 		return nil, status.Errorf(codes.Internal, "Error converting request to user: %v", err)
 	}
 
-	err = i.noteService.Create(ctx, user)
+	err = i.userService.Create(ctx, user)
 	if err != nil {
 		switch status.Code(err) {
 		case codes.Unknown:

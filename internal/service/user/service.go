@@ -13,6 +13,7 @@ type Service interface {
 	Create(ctx context.Context, user *model.User) error
 	Get(ctx context.Context, username string) (user *model.User, err error)
 	Update(ctx context.Context, username string, user *model.User) error
+	Delete(ctx context.Context, username string) error
 }
 
 type service struct {

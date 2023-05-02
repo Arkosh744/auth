@@ -18,6 +18,7 @@ type Repository interface {
 	ExistsName(ctx context.Context, username string) (exists bool, err error)
 	ExistsEmail(ctx context.Context, email string) (exists bool, err error)
 	Update(ctx context.Context, username string, user *model.User) error
+	Delete(ctx context.Context, username string) error
 }
 
 type repository struct {
@@ -111,6 +112,25 @@ func (r *repository) Update(ctx context.Context, username string, user *model.Us
 	if user.Role != "" {
 		builder = builder.Set("role", user.Role)
 	}
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return err
+	}
+
+	_, err = r.pool.Exec(ctx, query, v...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *repository) Delete(ctx context.Context, username string) error {
+	builder := sq.Update(tableName).
+		PlaceholderFormat(sq.Dollar).
+		Set("deleted_at", "NOW()").
+		Where("username = ?", username)
 
 	query, v, err := builder.ToSql()
 	if err != nil {

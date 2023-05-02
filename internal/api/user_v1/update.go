@@ -17,7 +17,7 @@ func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (r
 		return response, status.Errorf(codes.InvalidArgument, "Request validation failed: %v", err)
 	}
 
-	_, err = i.userService.Get(ctx, req.Username)
+	_, err = i.userService.Get(ctx, req.GetUsername())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "User not found: %v", err)
 	}
@@ -36,7 +36,7 @@ func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (r
 }
 
 func validateUpdateRequest(req *desc.UpdateRequest) error {
-	// for now, simple update password without confirmation
+	// for now, simple update password without any other checks
 	if req.GetNewPassword() != nil && !validator.IsPasswordValid(req.GetNewPassword().GetValue()) {
 		return fmt.Errorf(ErrNotValidPassword)
 	}

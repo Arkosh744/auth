@@ -40,10 +40,8 @@ func main() {
 	repo := userRepo.NewRepository(dbc)
 	service := userService.NewService(repo)
 	desc.RegisterUserServer(s, userV1.NewImplementation(service))
-
 	err = s.Serve(list)
 	if err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
-
 }

@@ -10,7 +10,7 @@ import (
 )
 
 func (i *Implementation) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
-	user, err := i.userService.Get(ctx, req.Username)
+	user, err := i.userService.Get(ctx, req.GetUsername())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "User not found: %v", err)
 	}

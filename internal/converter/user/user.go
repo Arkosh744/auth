@@ -26,6 +26,7 @@ func ToUser(user *desc.CreateRequest) (*model.User, error) {
 		return nil, err
 	}
 
+	//TODO: hash password
 	return &model.User{
 		Username: user.GetUsername(),
 		Email:    strings.ToLower(strings.TrimSpace(user.GetEmail())),
@@ -52,6 +53,7 @@ func ToUpdateUser(req *desc.UpdateRequest) (user *model.User, err error) {
 		user.Email = req.GetNewEmail().GetValue()
 	}
 
+	//TODO: hash password
 	if req.GetNewPassword() != nil {
 		user.Password = req.GetNewPassword().GetValue()
 	}

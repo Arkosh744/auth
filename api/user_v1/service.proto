@@ -21,9 +21,6 @@ message CreateRequest {
   string password = 3;
   string password_confirm = 4;
   string role = 5;
-
-  google.protobuf.Timestamp created_at = 6;
-  google.protobuf.Timestamp updated_at = 7;
 }
 
 message CreateResponse {

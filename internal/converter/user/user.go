@@ -2,6 +2,7 @@ package user
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/Arkosh744/auth-grpc/internal/model"
 	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
@@ -25,11 +26,9 @@ func ToUser(user *desc.CreateRequest) (*model.User, error) {
 	}
 
 	return &model.User{
-		Username:  user.GetUsername(),
-		Email:     user.GetEmail(),
-		Password:  user.GetPassword(),
-		Role:      userRole,
-		CreatedAt: user.GetCreatedAt().AsTime(),
-		UpdatedAt: user.GetUpdatedAt().AsTime(),
+		Username: user.GetUsername(),
+		Email:    strings.ToLower(strings.TrimSpace(user.GetEmail())),
+		Password: user.GetPassword(),
+		Role:     userRole,
 	}, nil
 }

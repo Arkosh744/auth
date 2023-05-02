@@ -14,6 +14,8 @@ const tableName = "users"
 
 type Repository interface {
 	Create(context.Context, *model.User) error
+	ExistsName(ctx context.Context, username string) (exists bool, err error)
+	ExistsEmail(ctx context.Context, email string) (exists bool, err error)
 }
 
 type repository struct {
@@ -43,4 +45,22 @@ func (r *repository) Create(ctx context.Context, user *model.User) error {
 	}
 
 	return nil
+}
+
+func (r *repository) ExistsName(ctx context.Context, username string) (exists bool, err error) {
+	err = r.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)", username).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+func (r *repository) ExistsEmail(ctx context.Context, email string) (exists bool, err error) {
+	err = r.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", email).Scan(&exists)
+	if err != nil {
+		return false, err
+	}
+
+	return exists, nil
 }

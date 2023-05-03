@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Arkosh744/auth-grpc/internal/model"
+	"github.com/Arkosh744/auth-grpc/pkg/encrypt"
 	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -26,11 +27,15 @@ func ToUser(user *desc.CreateRequest) (*model.User, error) {
 		return nil, err
 	}
 
-	//TODO: hash password
+	passHash, err := encrypt.HashPassword(user.GetPassword())
+	if err != nil {
+		return nil, err
+	}
+
 	return &model.User{
 		Username: user.GetUsername(),
 		Email:    strings.ToLower(strings.TrimSpace(user.GetEmail())),
-		Password: user.GetPassword(),
+		Password: passHash,
 		Role:     userRole,
 	}, nil
 }
@@ -53,9 +58,11 @@ func ToUpdateUser(req *desc.UpdateRequest) (user *model.User, err error) {
 		user.Email = req.GetNewEmail().GetValue()
 	}
 
-	//TODO: hash password
 	if req.GetNewPassword() != nil {
-		user.Password = req.GetNewPassword().GetValue()
+		user.Password, err = encrypt.HashPassword(req.GetNewPassword().GetValue())
+		if err != nil {
+			return user, err
+		}
 	}
 
 	return user, err

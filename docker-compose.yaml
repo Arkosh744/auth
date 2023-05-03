@@ -2,7 +2,7 @@ version: '3'
 
 services:
   postgres:
-    image: postgres:14.7
+    image: postgres:14.7-alpine3.17
     environment:
       - "POSTGRES_USER=${POSTGRES_USER}"
       - "POSTGRES_PASSWORD=${POSTGRES_PASSWORD}"

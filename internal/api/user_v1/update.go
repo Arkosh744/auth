@@ -5,34 +5,31 @@ import (
 	"fmt"
 
 	converter "github.com/Arkosh744/auth-grpc/internal/converter/user"
+	"github.com/Arkosh744/auth-grpc/internal/model"
+	"github.com/Arkosh744/auth-grpc/internal/pkg/validator"
 	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
-	"github.com/Arkosh744/auth-grpc/pkg/validator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (response *desc.UpdateResponse, err error) {
-	err = validateUpdateRequest(req)
+func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.Empty, error) {
+	err := validateUpdateRequest(req)
 	if err != nil {
-		return response, status.Errorf(codes.InvalidArgument, "Request validation failed: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %v", err)
 	}
 
 	_, err = i.userService.Get(ctx, req.GetUsername())
 	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "User not found: %v", err)
+		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
 	}
 
-	user, err := converter.ToUpdateUser(req)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Error converting request to user: %v", err)
-	}
-
-	err = i.userService.Update(ctx, req.GetUsername(), user)
+	err = i.userService.Update(ctx, req.GetUsername(), converter.ToUpdateUser(req))
 	if err != nil {
 		return nil, err
 	}
 
-	return &desc.UpdateResponse{}, nil
+	return &emptypb.Empty{}, nil
 }
 
 func validateUpdateRequest(req *desc.UpdateRequest) error {
@@ -47,6 +44,10 @@ func validateUpdateRequest(req *desc.UpdateRequest) error {
 
 	if req.GetNewUsername() != nil && !validator.IsUsernameValid(req.GetNewUsername().GetValue()) {
 		return fmt.Errorf(ErrNotValidUsername)
+	}
+
+	if req.GetNewRole() != nil && model.StringToRole(req.GetNewRole().GetValue()) == model.RoleUnknown {
+		return fmt.Errorf("invalid role provided: %v", req.GetNewRole().GetValue())
 	}
 
 	return nil

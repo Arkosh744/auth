@@ -14,9 +14,8 @@ const tableName = "users"
 
 type Repository interface {
 	Create(context.Context, *model.User) error
-	Get(ctx context.Context, username string) (user *model.User, err error)
-	ExistsName(ctx context.Context, username string) (exists bool, err error)
-	ExistsEmail(ctx context.Context, email string) (exists bool, err error)
+	Get(ctx context.Context, username string) (*model.User, error)
+	ExistsNameEmail(ctx context.Context, user *model.User) (nameExists, emailExists bool, err error)
 	Update(ctx context.Context, username string, user *model.User) error
 	Delete(ctx context.Context, username string) error
 }
@@ -50,29 +49,27 @@ func (r *repository) Create(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r *repository) ExistsName(ctx context.Context, username string) (exists bool, err error) {
-	err = r.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE username = $1)", username).Scan(&exists)
+func (r *repository) ExistsNameEmail(ctx context.Context, user *model.User) (nameExists, emailExists bool, err error) {
+	err = r.pool.QueryRow(ctx, `
+		SELECT 
+			EXISTS(SELECT 1 FROM users WHERE username = $1) as name_exists,
+			EXISTS(SELECT 1 FROM users WHERE email = $2) as email_exists
+	`, user.Username, user.Email).
+		Scan(&nameExists, &emailExists)
+
 	if err != nil {
-		return false, err
+		return false, false, err
 	}
 
-	return exists, nil
+	return nameExists, emailExists, nil
 }
 
-func (r *repository) ExistsEmail(ctx context.Context, email string) (exists bool, err error) {
-	err = r.pool.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)", email).Scan(&exists)
-	if err != nil {
-		return false, err
-	}
-
-	return exists, nil
-}
-
-func (r *repository) Get(ctx context.Context, username string) (user *model.User, err error) {
+func (r *repository) Get(ctx context.Context, username string) (*model.User, error) {
 	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at").
 		From(tableName).
 		Where("username = ?", username).
 		Where("deleted_at IS NULL").
+		Limit(1).
 		PlaceholderFormat(sq.Dollar)
 
 	query, v, err := builder.ToSql()
@@ -80,12 +77,14 @@ func (r *repository) Get(ctx context.Context, username string) (user *model.User
 		return nil, err
 	}
 
-	user = &model.User{}
-	err = r.pool.QueryRow(ctx, query, v...).
-		Scan(&user.Username, &user.Email, &user.Password, &user.Role, &user.CreatedAt, &user.UpdatedAt)
-	if err != nil {
+	user := &model.User{}
+	roleStr := ""
+	if err = r.pool.QueryRow(ctx, query, v...).
+		Scan(&user.Username, &user.Email, &user.Password, &roleStr, &user.CreatedAt, &user.UpdatedAt); err != nil {
 		return nil, err
 	}
+
+	user.Role = model.StringToRole(roleStr)
 
 	return user, nil
 }
@@ -93,8 +92,8 @@ func (r *repository) Get(ctx context.Context, username string) (user *model.User
 func (r *repository) Update(ctx context.Context, username string, user *model.User) error {
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
-		Set("updated_at", user.UpdatedAt).
-		Where("username = ?", username).
+		Set("updated_at", sq.Expr("NOW()")).
+		Where(sq.Eq{"username": username}).
 		Where("deleted_at IS NULL")
 
 	if user.Username != "" {
@@ -109,7 +108,7 @@ func (r *repository) Update(ctx context.Context, username string, user *model.Us
 		builder = builder.Set("password", user.Password)
 	}
 
-	if user.Role != "" {
+	if user.Role.String() != "" {
 		builder = builder.Set("role", user.Role)
 	}
 
@@ -129,8 +128,8 @@ func (r *repository) Update(ctx context.Context, username string, user *model.Us
 func (r *repository) Delete(ctx context.Context, username string) error {
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
-		Set("deleted_at", "NOW()").
-		Where("username = ?", username)
+		Set("deleted_at", sq.Expr("NOW()")).
+		Where(sq.Eq{"username": username})
 
 	query, v, err := builder.ToSql()
 	if err != nil {

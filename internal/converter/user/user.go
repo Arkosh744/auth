@@ -1,53 +1,27 @@
 package user
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Arkosh744/auth-grpc/internal/model"
-	"github.com/Arkosh744/auth-grpc/pkg/encrypt"
 	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func ToUserRole(role string) (userRole model.UserRole, err error) {
-	switch role {
-	case model.UserRoleAdmin.String():
-		return model.UserRoleAdmin, nil
-	case model.UserRoleUser.String():
-		return model.UserRoleUser, nil
-	default:
-		return userRole, fmt.Errorf("failed to convert user role: %s", role)
-	}
-}
-
-func ToUser(user *desc.CreateRequest) (*model.User, error) {
-	userRole, err := ToUserRole(user.GetRole())
-	if err != nil {
-		return nil, err
-	}
-
-	passHash, err := encrypt.HashPassword(user.GetPassword())
-	if err != nil {
-		return nil, err
-	}
-
+func ToUser(user *desc.CreateRequest) *model.User {
 	return &model.User{
-		Username: user.GetUsername(),
-		Email:    strings.ToLower(strings.TrimSpace(user.GetEmail())),
-		Password: passHash,
-		Role:     userRole,
-	}, nil
+		Username: user.GetUser().GetUsername(),
+		Email:    strings.ToLower(strings.TrimSpace(user.GetUser().GetEmail())),
+		Password: user.GetUser().GetUsername(),
+		Role:     model.StringToRole(user.GetUser().GetRole()),
+	}
 }
 
-func ToUpdateUser(req *desc.UpdateRequest) (user *model.User, err error) {
-	user = &model.User{}
+func ToUpdateUser(req *desc.UpdateRequest) *model.User {
+	user := &model.User{}
 
 	if req.GetNewRole() != nil {
-		user.Role, err = ToUserRole(req.GetNewRole().GetValue())
-		if err != nil {
-			return user, err
-		}
+		user.Role = model.StringToRole(req.GetNewRole().GetValue())
 	}
 
 	if req.GetNewUsername() != nil {
@@ -59,20 +33,18 @@ func ToUpdateUser(req *desc.UpdateRequest) (user *model.User, err error) {
 	}
 
 	if req.GetNewPassword() != nil {
-		user.Password, err = encrypt.HashPassword(req.GetNewPassword().GetValue())
-		if err != nil {
-			return user, err
-		}
+		user.Password = req.GetNewPassword().GetValue()
 	}
 
-	return user, err
+	return user
 }
 
 func ToGetResponse(user *model.User) *desc.GetResponse {
 	return &desc.GetResponse{
-		Username:  user.Username,
-		Email:     user.Email,
-		Role:      user.Role.String(),
+		User: &desc.UserInfo{
+			Username: user.Username,
+			Email:    user.Email,
+			Role:     user.Role.String()},
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}

@@ -8,39 +8,17 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *service) validateEmail(ctx context.Context, email string) error {
-	exists, err := s.repository.ExistsEmail(ctx, email)
-	if err != nil {
-		return err
-	}
-
-	if exists {
-		return status.Errorf(codes.AlreadyExists, "Error: %v", ErrEmailExists)
-	}
-
-	return nil
-}
-
-func (s *service) validateName(ctx context.Context, username string) error {
-	exists, err := s.repository.ExistsName(ctx, username)
-	if err != nil {
-		return err
-	}
-
-	if exists {
-		return status.Errorf(codes.AlreadyExists, "Error: %v", ErrUsernameExists)
-	}
-
-	return nil
-}
-
 func (s *service) validateNameEmail(ctx context.Context, user *model.User) error {
-	if err := s.validateName(ctx, user.Username); err != nil {
-		return err
+	name, email, err := s.repository.ExistsNameEmail(ctx, user)
+	if err != nil {
+		return status.Errorf(codes.Internal, "validate data error: %v", err)
 	}
 
-	if err := s.validateEmail(ctx, user.Email); err != nil {
-		return err
+	if name {
+		return status.Errorf(codes.AlreadyExists, "error: %v", ErrUsernameExists)
+	}
+	if email {
+		return status.Errorf(codes.AlreadyExists, "error: %v", ErrEmailExists)
 	}
 
 	return nil

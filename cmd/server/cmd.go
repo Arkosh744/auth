@@ -26,7 +26,7 @@ func main() {
 	s := grpc.NewServer()
 	reflection.Register(s)
 
-	pgConfig, err := pgxpool.ParseConfig("host=localhost port=54325 dbname=grpc user=grpc-user password=grpc-password sslmode=disable")
+	pgConfig, err := pgxpool.ParseConfig("host=localhost port=54325 dbname=user user=user-user password=user-password sslmode=disable")
 	if err != nil {
 		log.Fatalf("failed to parse config: %v", err)
 	}

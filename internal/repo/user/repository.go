@@ -67,7 +67,7 @@ func (r *repository) ExistsNameEmail(ctx context.Context, user *model.User) (nam
 func (r *repository) Get(ctx context.Context, username string) (*model.User, error) {
 	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at").
 		From(tableName).
-		Where("username = ?", username).
+		Where(sq.Eq{"username": username}).
 		Where("deleted_at IS NULL").
 		Limit(1).
 		PlaceholderFormat(sq.Dollar)

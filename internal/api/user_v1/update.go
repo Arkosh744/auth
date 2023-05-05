@@ -24,8 +24,11 @@ func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (*
 		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
 	}
 
-	err = i.userService.Update(ctx, req.GetUsername(), converter.ToUpdateUser(req))
-	if err != nil {
+	if err = i.userService.Update(ctx, req.GetUsername(), converter.ToUpdateUser(req)); err != nil {
+		if status.Code(err) == codes.Unknown {
+			return nil, status.Errorf(codes.Internal, "error update user: %v", err)
+		}
+
 		return nil, err
 	}
 

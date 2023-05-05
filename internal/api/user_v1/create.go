@@ -21,10 +21,6 @@ func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*
 	}
 
 	user := converter.ToUser(req)
-	if err != nil {
-		return nil, status.Errorf(codes.Internal, "error converting request to user: %v", err)
-	}
-
 	if user.Role == model.RoleUnknown {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid role provided: %v", user.Role)
 	}
@@ -36,12 +32,11 @@ func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*
 
 	err = i.userService.Create(ctx, user)
 	if err != nil {
-		switch status.Code(err) {
-		case codes.Unknown:
-			return nil, status.Errorf(codes.Internal, "error creating user: %v", err)
-		default:
-			return nil, err
+		if status.Code(err) == codes.Unknown {
+			return nil, status.Errorf(codes.Internal, "error create user: %v", err)
 		}
+
+		return nil, err
 	}
 
 	return &emptypb.Empty{}, nil

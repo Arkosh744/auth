@@ -17,6 +17,7 @@ func (s *service) validateNameEmail(ctx context.Context, user *model.User) error
 	if name {
 		return status.Errorf(codes.AlreadyExists, "error: %v", ErrUsernameExists)
 	}
+
 	if email {
 		return status.Errorf(codes.AlreadyExists, "error: %v", ErrEmailExists)
 	}

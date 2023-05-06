@@ -5,6 +5,7 @@ import (
 
 	"github.com/Arkosh744/auth-grpc/internal/model"
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -15,8 +16,8 @@ const tableName = "users"
 type Repository interface {
 	Create(context.Context, *model.User) error
 	Get(ctx context.Context, username string) (*model.User, error)
-	ExistsNameEmail(ctx context.Context, user *model.User) (nameExists, emailExists bool, err error)
-	Update(ctx context.Context, username string, user *model.User) error
+	ExistsNameEmail(ctx context.Context, user *model.UserIdentifier) (model.ExistsStatus, error)
+	Update(ctx context.Context, username string, user *model.UpdateUser) error
 	Delete(ctx context.Context, username string) error
 }
 
@@ -49,19 +50,29 @@ func (r *repository) Create(ctx context.Context, user *model.User) error {
 	return nil
 }
 
-func (r *repository) ExistsNameEmail(ctx context.Context, user *model.User) (nameExists, emailExists bool, err error) {
-	err = r.pool.QueryRow(ctx, `
-		SELECT 
-			EXISTS(SELECT 1 FROM users WHERE username = $1) as name_exists,
-			EXISTS(SELECT 1 FROM users WHERE email = $2) as email_exists
-	`, user.Username, user.Email).
-		Scan(&nameExists, &emailExists)
+func (r *repository) ExistsNameEmail(ctx context.Context, user *model.UserIdentifier) (model.ExistsStatus, error) {
+	builder := sq.Select().PlaceholderFormat(sq.Dollar).Column(sq.Expr(`
+			CASE 
+				WHEN EXISTS(SELECT 1 FROM users WHERE (username = $1) AND (email = $2)) THEN 3 
+				WHEN EXISTS(SELECT 1 FROM users WHERE username = $1) THEN 1 
+				WHEN EXISTS(SELECT 1 FROM users WHERE email = $2) THEN 2 
+				ELSE 0 
+			END 
+			as exists_code`,
+		user.Username.String, user.Email.String))
 
+	query, v, err := builder.ToSql()
 	if err != nil {
-		return false, false, err
+		return 0, err
 	}
 
-	return nameExists, emailExists, nil
+	var existsCode model.ExistsStatus
+	err = r.pool.QueryRow(ctx, query, v...).Scan(&existsCode)
+	if err != nil {
+		return 0, err
+	}
+
+	return existsCode, nil
 }
 
 func (r *repository) Get(ctx context.Context, username string) (*model.User, error) {
@@ -89,27 +100,27 @@ func (r *repository) Get(ctx context.Context, username string) (*model.User, err
 	return user, nil
 }
 
-func (r *repository) Update(ctx context.Context, username string, user *model.User) error {
+func (r *repository) Update(ctx context.Context, username string, user *model.UpdateUser) error {
 	builder := sq.Update(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Set("updated_at", sq.Expr("NOW()")).
 		Where(sq.Eq{"username": username}).
 		Where("deleted_at IS NULL")
 
-	if user.Username != "" {
-		builder = builder.Set("username", user.Username)
+	if user.Username.Valid {
+		builder = builder.Set("username", user.Username.String)
 	}
 
-	if user.Email != "" {
-		builder = builder.Set("email", user.Email)
+	if user.Email.Valid {
+		builder = builder.Set("email", user.Email.String)
 	}
 
-	if user.Password != "" {
-		builder = builder.Set("password", user.Password)
+	if user.Password.Valid {
+		builder = builder.Set("password", user.Password.String)
 	}
 
-	if user.Role.String() != "" {
-		builder = builder.Set("role", user.Role)
+	if user.Role.Valid {
+		builder = builder.Set("role", user.Role.String)
 	}
 
 	query, v, err := builder.ToSql()
@@ -117,9 +128,13 @@ func (r *repository) Update(ctx context.Context, username string, user *model.Us
 		return err
 	}
 
-	_, err = r.pool.Exec(ctx, query, v...)
+	res, err := r.pool.Exec(ctx, query, v...)
 	if err != nil {
 		return err
+	}
+
+	if res.RowsAffected() == 0 {
+		return pgx.ErrNoRows
 	}
 
 	return nil
@@ -136,9 +151,13 @@ func (r *repository) Delete(ctx context.Context, username string) error {
 		return err
 	}
 
-	_, err = r.pool.Exec(ctx, query, v...)
+	row, err := r.pool.Exec(ctx, query, v...)
 	if err != nil {
 		return err
+	}
+
+	if row.RowsAffected() == 0 {
+		return pgx.ErrNoRows
 	}
 
 	return nil

@@ -19,11 +19,6 @@ func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (*
 		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %v", err)
 	}
 
-	_, err = i.userService.Get(ctx, req.GetUsername())
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "user not found: %v", err)
-	}
-
 	if err = i.userService.Update(ctx, req.GetUsername(), converter.ToUpdateUser(req)); err != nil {
 		if status.Code(err) == codes.Unknown {
 			return nil, status.Errorf(codes.Internal, "error update user: %v", err)

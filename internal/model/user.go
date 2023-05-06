@@ -1,15 +1,16 @@
 package model
 
 import (
+	"database/sql"
 	"time"
 )
 
 type Role int
 
 const (
-	RoleAdmin   Role = iota + 1 // 1
-	RoleUser                    // 2
-	RoleUnknown                 // 3
+	RoleUnknown Role = iota // 0
+	RoleAdmin               // 1
+	RoleUser                // 2
 )
 
 type User struct {
@@ -22,6 +23,17 @@ type User struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt *time.Time
+}
+
+type UserIdentifier struct {
+	Username sql.NullString
+	Email    sql.NullString
+}
+
+type UpdateUser struct {
+	UserIdentifier
+	Password sql.NullString
+	Role     sql.NullString
 }
 
 func (r Role) String() string {
@@ -45,3 +57,24 @@ func StringToRole(roleStr string) Role {
 		return RoleUnknown
 	}
 }
+
+func (u *UserIdentifier) Set(username, email string) {
+	if username != "" {
+		u.Username.String = username
+		u.Username.Valid = true
+	}
+
+	if email != "" {
+		u.Email.String = email
+		u.Email.Valid = true
+	}
+}
+
+type ExistsStatus int
+
+const (
+	StatusNone ExistsStatus = iota
+	StatusUsernameExists
+	StatusEmailExists
+	StatusBothExist
+)

@@ -7,7 +7,10 @@ import (
 )
 
 func (s *service) Create(ctx context.Context, user *model.User) error {
-	if err := s.validateNameEmail(ctx, user); err != nil {
+	var userIdentifier model.UserIdentifier
+	userIdentifier.Set(user.Username, user.Email)
+
+	if err := s.validateNameEmail(ctx, &userIdentifier); err != nil {
 		return err
 	}
 

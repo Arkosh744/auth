@@ -17,23 +17,27 @@ func ToUser(user *desc.CreateRequest) *model.User {
 	}
 }
 
-func ToUpdateUser(req *desc.UpdateRequest) *model.User {
-	user := &model.User{}
+func ToUpdateUser(req *desc.UpdateRequest) *model.UpdateUser {
+	user := &model.UpdateUser{}
 
 	if req.GetNewRole() != nil {
-		user.Role = model.StringToRole(req.GetNewRole().GetValue())
+		user.Role.String = model.StringToRole(req.GetNewRole().GetValue()).String()
+		user.Role.Valid = true
 	}
 
 	if req.GetNewUsername() != nil {
-		user.Username = req.GetNewUsername().GetValue()
+		user.Username.String = req.GetNewUsername().GetValue()
+		user.Username.Valid = true
 	}
 
 	if req.GetNewEmail() != nil {
-		user.Email = req.GetNewEmail().GetValue()
+		user.Email.String = req.GetNewEmail().GetValue()
+		user.Email.Valid = true
 	}
 
 	if req.GetNewPassword() != nil {
-		user.Password = req.GetNewPassword().GetValue()
+		user.Password.String = req.GetNewPassword().GetValue()
+		user.Password.Valid = true
 	}
 
 	return user

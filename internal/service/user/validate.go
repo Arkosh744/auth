@@ -8,19 +8,24 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func (s *service) validateNameEmail(ctx context.Context, user *model.User) error {
-	name, email, err := s.repository.ExistsNameEmail(ctx, user)
+func (s *service) validateNameEmail(ctx context.Context, user *model.UserIdentifier) error {
+	exists, err := s.repository.ExistsNameEmail(ctx, user)
 	if err != nil {
 		return status.Errorf(codes.Internal, "validate data error: %v", err)
 	}
 
-	if name {
+	return checkExists(exists)
+}
+
+func checkExists(s model.ExistsStatus) error {
+	switch s {
+	case model.StatusUsernameExists:
 		return status.Errorf(codes.AlreadyExists, "error: %v", ErrUsernameExists)
-	}
-
-	if email {
+	case model.StatusEmailExists:
 		return status.Errorf(codes.AlreadyExists, "error: %v", ErrEmailExists)
+	case model.StatusBothExist:
+		return status.Errorf(codes.AlreadyExists, "error: %v", ErrBothExists)
+	default:
+		return nil
 	}
-
-	return nil
 }

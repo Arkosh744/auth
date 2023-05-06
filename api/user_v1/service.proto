@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package user_v1;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/Arkosh744/auth-grpc/pkg/user_v1;user_v1";
+
+service User {
+  rpc Create(CreateRequest) returns (google.protobuf.Empty);
+  rpc Get(GetRequest) returns (GetResponse);
+  rpc Update(UpdateRequest) returns (google.protobuf.Empty);
+  rpc Delete(DeleteRequest) returns (google.protobuf.Empty);
+}
+
+message UserInfo {
+  string username = 1;
+  string email = 2;
+  string role = 3;
+}
+
+message CreateRequest {
+  UserInfo user = 1;
+  string password = 2;
+  string password_confirm = 3;
+}
+
+message GetRequest {
+  string username = 1;
+}
+
+message GetResponse {
+  UserInfo user = 1;
+
+  google.protobuf.Timestamp created_at = 2;
+  google.protobuf.Timestamp updated_at = 3;
+}
+
+message UpdateRequest {
+  string username = 1;
+
+  google.protobuf.StringValue new_username = 2;
+  google.protobuf.StringValue new_email = 3;
+  google.protobuf.StringValue new_password = 4;
+  google.protobuf.StringValue new_role = 5;
+}
+
+message DeleteRequest {
+  string username = 1;
+}

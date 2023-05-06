@@ -73,8 +73,8 @@ func (u *UserIdentifier) Set(username, email string) {
 type ExistsStatus int
 
 const (
-	StatusNone ExistsStatus = iota
-	StatusUsernameExists
-	StatusEmailExists
-	StatusBothExist
+	StatusNone           ExistsStatus = iota // 0
+	StatusUsernameExists                     // 1
+	StatusEmailExists                        // 2
+	StatusBothExist                          // 3
 )

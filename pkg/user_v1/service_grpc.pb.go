@@ -25,6 +25,7 @@ const _ = grpc.SupportPackageIsVersion7
 type UserClient interface {
 	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
+	List(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListResponse, error)
 	Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
@@ -55,6 +56,15 @@ func (c *userClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallO
 	return out, nil
 }
 
+func (c *userClient) List(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ListResponse, error) {
+	out := new(ListResponse)
+	err := c.cc.Invoke(ctx, "/user_v1.User/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userClient) Update(ctx context.Context, in *UpdateRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/user_v1.User/Update", in, out, opts...)
@@ -79,6 +89,7 @@ func (c *userClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc
 type UserServer interface {
 	Create(context.Context, *CreateRequest) (*empty.Empty, error)
 	Get(context.Context, *GetRequest) (*GetResponse, error)
+	List(context.Context, *empty.Empty) (*ListResponse, error)
 	Update(context.Context, *UpdateRequest) (*empty.Empty, error)
 	Delete(context.Context, *DeleteRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedUserServer()
@@ -93,6 +104,9 @@ func (UnimplementedUserServer) Create(context.Context, *CreateRequest) (*empty.E
 }
 func (UnimplementedUserServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+}
+func (UnimplementedUserServer) List(context.Context, *empty.Empty) (*ListResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
 func (UnimplementedUserServer) Update(context.Context, *UpdateRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
@@ -149,6 +163,24 @@ func _User_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{
 	return interceptor(ctx, in, info, handler)
 }
 
+func _User_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/user_v1.User/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServer).List(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _User_Update_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateRequest)
 	if err := dec(in); err != nil {
@@ -199,6 +231,10 @@ var User_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Get",
 			Handler:    _User_Get_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _User_List_Handler,
 		},
 		{
 			MethodName: "Update",

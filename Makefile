@@ -1,7 +1,10 @@
+include .env
+export $(shell sed 's/=.*//' .env)
+
 LOCAL_BIN:=$(CURDIR)/bin
 
 LOCAL_MIGRATION_DIR=./migrations
-LOCAL_MIGRATION_DSN="host=localhost port=54325 dbname=user user=user-user password=user-password sslmode=disable"
+LOCAL_MIGRATION_DSN="host=$(PG_HOST) port=$(PG_PORT) dbname=$(PG_DB) user=$(PG_USER) password=$(PG_PASSWORD) sslmode=$(PG_SSL)"
 
 install-go-deps:
 	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.28.1

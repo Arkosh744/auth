@@ -59,9 +59,5 @@ func validateCreateRequest(req *desc.CreateRequest) error {
 		return fmt.Errorf(ErrNotValidUsername)
 	}
 
-	if model.StringToRole(req.GetUser().GetRole()) == model.RoleUnknown {
-		return fmt.Errorf("invalid role provided: %v", req.GetUser().GetRole())
-	}
-
 	return nil
 }

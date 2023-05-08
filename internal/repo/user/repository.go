@@ -3,10 +3,10 @@ package user
 import (
 	"context"
 
+	"github.com/Arkosh744/auth-grpc/internal/client/pg"
 	"github.com/Arkosh744/auth-grpc/internal/model"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 var _ Repository = (*repository)(nil)
@@ -16,18 +16,19 @@ const tableName = "users"
 type Repository interface {
 	Create(context.Context, *model.User) error
 	Get(ctx context.Context, username string) (*model.User, error)
+	List(ctx context.Context) ([]*model.User, *pg.Records, error)
 	ExistsNameEmail(ctx context.Context, user *model.UserIdentifier) (model.ExistsStatus, error)
 	Update(ctx context.Context, username string, user *model.UpdateUser) error
 	Delete(ctx context.Context, username string) error
 }
 
 type repository struct {
-	pool *pgxpool.Pool
+	client pg.Client
 }
 
-func NewRepository(pool *pgxpool.Pool) *repository {
+func NewRepository(client pg.Client) *repository {
 	return &repository{
-		pool: pool,
+		client: client,
 	}
 }
 
@@ -42,8 +43,12 @@ func (r *repository) Create(ctx context.Context, user *model.User) error {
 		return err
 	}
 
-	_, err = r.pool.Exec(ctx, query, v...)
-	if err != nil {
+	q := pg.Query{
+		Name:     "user.Create",
+		QueryRaw: query,
+	}
+
+	if _, err = r.client.PG().ExecContext(ctx, q, v...); err != nil {
 		return err
 	}
 
@@ -51,7 +56,8 @@ func (r *repository) Create(ctx context.Context, user *model.User) error {
 }
 
 func (r *repository) ExistsNameEmail(ctx context.Context, user *model.UserIdentifier) (model.ExistsStatus, error) {
-	builder := sq.Select().PlaceholderFormat(sq.Dollar).Column(sq.Expr(`
+	builder := sq.Select().PlaceholderFormat(sq.Dollar).
+		Column(sq.Expr(`
 			CASE 
 				WHEN EXISTS(SELECT 1 FROM users WHERE (username = $1) AND (email = $2)) THEN 3 
 				WHEN EXISTS(SELECT 1 FROM users WHERE username = $1) THEN 1 
@@ -59,16 +65,20 @@ func (r *repository) ExistsNameEmail(ctx context.Context, user *model.UserIdenti
 				ELSE 0 
 			END 
 			as exists_code`,
-		user.Username.String, user.Email.String))
+			user.Username.String, user.Email.String))
 
 	query, v, err := builder.ToSql()
 	if err != nil {
 		return 0, err
 	}
 
+	q := pg.Query{
+		Name:     "user.ExistsNameEmail",
+		QueryRaw: query,
+	}
+
 	var existsCode model.ExistsStatus
-	err = r.pool.QueryRow(ctx, query, v...).Scan(&existsCode)
-	if err != nil {
+	if err = r.client.PG().QueryRowContext(ctx, q, v...).Scan(&existsCode); err != nil {
 		return 0, err
 	}
 
@@ -88,16 +98,68 @@ func (r *repository) Get(ctx context.Context, username string) (*model.User, err
 		return nil, err
 	}
 
-	user := &model.User{}
-	roleStr := ""
-	if err = r.pool.QueryRow(ctx, query, v...).
+	q := pg.Query{
+		Name:     "user.Get",
+		QueryRaw: query,
+	}
+
+	var (
+		roleStr string
+		user    = &model.User{}
+	)
+
+	if err = r.client.PG().QueryRowContext(ctx, q, v...).
 		Scan(&user.Username, &user.Email, &user.Password, &roleStr, &user.CreatedAt, &user.UpdatedAt); err != nil {
 		return nil, err
 	}
-
 	user.Role = model.StringToRole(roleStr)
 
 	return user, nil
+}
+
+func (r *repository) List(ctx context.Context) ([]*model.User, *pg.Records, error) {
+	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at").
+		From(tableName).
+		Where("deleted_at IS NULL").
+		PlaceholderFormat(sq.Dollar)
+
+	query, v, err := builder.ToSql()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	q := pg.Query{
+		Name:     "user.List",
+		QueryRaw: query,
+	}
+
+	rows, err := r.client.PG().QueryContext(ctx, q, v...)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer rows.Close()
+
+	var users = make([]*model.User, 0)
+	for rows.Next() {
+		user := &model.User{}
+		roleStr := ""
+
+		if err = rows.
+			Scan(&user.Username, &user.Email, &user.Password, &roleStr, &user.CreatedAt, &user.UpdatedAt); err != nil {
+			return nil, nil, err
+		}
+
+		user.Role = model.StringToRole(roleStr)
+		users = append(users, user)
+	}
+
+	// don't have filters, so found and total are the same
+	records := &pg.Records{
+		Found: int32(len(users)),
+		Total: int32(len(users)),
+	}
+
+	return users, records, nil
 }
 
 func (r *repository) Update(ctx context.Context, username string, user *model.UpdateUser) error {
@@ -128,12 +190,17 @@ func (r *repository) Update(ctx context.Context, username string, user *model.Up
 		return err
 	}
 
-	res, err := r.pool.Exec(ctx, query, v...)
+	q := pg.Query{
+		Name:     "user.Update",
+		QueryRaw: query,
+	}
+
+	row, err := r.client.PG().ExecContext(ctx, q, v...)
 	if err != nil {
 		return err
 	}
 
-	if res.RowsAffected() == 0 {
+	if row.RowsAffected() == 0 {
 		return pgx.ErrNoRows
 	}
 
@@ -151,7 +218,12 @@ func (r *repository) Delete(ctx context.Context, username string) error {
 		return err
 	}
 
-	row, err := r.pool.Exec(ctx, query, v...)
+	q := pg.Query{
+		Name:     "user.Delete",
+		QueryRaw: query,
+	}
+
+	row, err := r.client.PG().ExecContext(ctx, q, v...)
 	if err != nil {
 		return err
 	}

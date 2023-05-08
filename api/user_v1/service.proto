@@ -11,6 +11,7 @@ option go_package = "github.com/Arkosh744/auth-grpc/pkg/user_v1;user_v1";
 service User {
   rpc Create(CreateRequest) returns (google.protobuf.Empty);
   rpc Get(GetRequest) returns (GetResponse);
+  rpc List(google.protobuf.Empty) returns (ListResponse);
   rpc Update(UpdateRequest) returns (google.protobuf.Empty);
   rpc Delete(DeleteRequest) returns (google.protobuf.Empty);
 }
@@ -18,7 +19,13 @@ service User {
 message UserInfo {
   string username = 1;
   string email = 2;
-  string role = 3;
+  Role role = 3;
+}
+
+enum Role {
+  UNKNOWN = 0;
+  ADMIN = 1;
+  USER = 2;
 }
 
 message CreateRequest {
@@ -36,6 +43,12 @@ message GetResponse {
 
   google.protobuf.Timestamp created_at = 2;
   google.protobuf.Timestamp updated_at = 3;
+}
+
+message ListResponse {
+  repeated UserInfo users = 1;
+  int32 found = 2;
+  int32 total = 3;
 }
 
 message UpdateRequest {

@@ -2,6 +2,8 @@ package model
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -48,7 +50,7 @@ func (r Role) String() string {
 }
 
 func StringToRole(roleStr string) Role {
-	switch roleStr {
+	switch strings.ToLower(roleStr) {
 	case "admin":
 		return RoleAdmin
 	case "user":
@@ -56,6 +58,22 @@ func StringToRole(roleStr string) Role {
 	default:
 		return RoleUnknown
 	}
+}
+
+func (r *Role) Scan(value interface{}) error {
+	if value == nil {
+		*r = RoleUnknown
+		return nil
+	}
+
+	roleStr, ok := value.(string)
+	if !ok {
+		return fmt.Errorf("cannot convert %v to string", value)
+	}
+
+	*r = StringToRole(roleStr)
+
+	return nil
 }
 
 func (u *UserIdentifier) Set(username, email string) {

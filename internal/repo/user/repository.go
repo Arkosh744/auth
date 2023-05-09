@@ -106,18 +106,12 @@ func (r *repository) Get(ctx context.Context, username string) (*model.User, err
 		QueryRaw: query,
 	}
 
-	var (
-		roleStr string
-		user    = &model.User{}
-	)
-
-	if err = r.client.PG().QueryRowContext(ctx, q, v...).
-		Scan(&user.Username, &user.Email, &user.Password, &roleStr, &user.CreatedAt, &user.UpdatedAt); err != nil {
+	var user model.User
+	if err = r.client.PG().GetContext(ctx, &user, q, v...); err != nil {
 		return nil, err
 	}
-	user.Role = model.StringToRole(roleStr)
 
-	return user, nil
+	return &user, nil
 }
 
 func (r *repository) List(ctx context.Context) ([]*model.User, *pg.Records, error) {
@@ -136,27 +130,12 @@ func (r *repository) List(ctx context.Context) ([]*model.User, *pg.Records, erro
 		QueryRaw: query,
 	}
 
-	rows, err := r.client.PG().QueryContext(ctx, q, v...)
-	if err != nil {
+	var users = make([]*model.User, 0)
+	if err = r.client.PG().ScanAllContext(ctx, &users, q, v...); err != nil {
 		return nil, nil, err
 	}
-	defer rows.Close()
 
-	var users = make([]*model.User, 0)
-	for rows.Next() {
-		user := &model.User{}
-		roleStr := ""
-
-		if err = rows.
-			Scan(&user.Username, &user.Email, &user.Password, &roleStr, &user.CreatedAt, &user.UpdatedAt); err != nil {
-			return nil, nil, err
-		}
-
-		user.Role = model.StringToRole(roleStr)
-		users = append(users, user)
-	}
-
-	// don't have filters, so found and total are the same
+	// don't have filters so found and total will be the same
 	records := &pg.Records{
 		Found: int32(len(users)),
 		Total: int32(len(users)),

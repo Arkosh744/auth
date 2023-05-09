@@ -2,9 +2,9 @@ package pg
 
 import (
 	"context"
-	"log"
 
 	"github.com/jackc/pgx/v4/pgxpool"
+	"go.uber.org/zap"
 )
 
 var _ Client = (*client)(nil)
@@ -18,13 +18,15 @@ type client struct {
 	pg PG
 }
 
-func NewClient(ctx context.Context, pgCfg *pgxpool.Config) (Client, error) {
+func NewClient(ctx context.Context, pgCfg *pgxpool.Config, log *zap.SugaredLogger) (Client, error) {
 	dbc, err := pgxpool.ConnectConfig(ctx, pgCfg)
 	if err != nil {
-		log.Fatalf("failed to connect to database: %s", err.Error())
+		log.Error("failed to connect to postgres", zap.Error(err))
+		return nil, err
 	}
+	log.Info("pg connected successfully")
 
-	return &client{pg: &pg{pgxPool: dbc}}, nil
+	return &client{pg: &pg{pgxPool: dbc, log: log}}, nil
 }
 
 func (c *client) PG() PG {

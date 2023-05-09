@@ -2,11 +2,13 @@ package app
 
 import (
 	"context"
+	"log"
 	"net"
 
 	"github.com/Arkosh744/auth-grpc/internal/closer"
 	"github.com/Arkosh744/auth-grpc/internal/config"
 	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -14,6 +16,7 @@ import (
 type App struct {
 	serviceProvider *serviceProvider
 	grpcServer      *grpc.Server
+	log             *zap.SugaredLogger
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -44,6 +47,7 @@ func (app *App) Run() error {
 func (app *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		config.Init,
+		app.initLogger,
 		app.initServiceProvider,
 		app.initGrpcServer,
 	}
@@ -57,8 +61,19 @@ func (app *App) initDeps(ctx context.Context) error {
 	return nil
 }
 
+func (app *App) initLogger(_ context.Context) error {
+	zapLog, err := config.SelectLogger()
+	if err != nil {
+		log.Fatalf("failed to get logger: %s", err.Error())
+	}
+
+	app.log = zapLog.Sugar()
+
+	return nil
+}
+
 func (app *App) initServiceProvider(_ context.Context) error {
-	app.serviceProvider = newServiceProvider()
+	app.serviceProvider = newServiceProvider(app.log)
 
 	return nil
 }

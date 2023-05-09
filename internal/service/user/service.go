@@ -6,6 +6,7 @@ import (
 	"github.com/Arkosh744/auth-grpc/internal/client/pg"
 	"github.com/Arkosh744/auth-grpc/internal/model"
 	userRepo "github.com/Arkosh744/auth-grpc/internal/repo/user"
+	"go.uber.org/zap"
 )
 
 var _ Service = (*service)(nil)
@@ -19,11 +20,13 @@ type Service interface {
 }
 
 type service struct {
+	log        *zap.SugaredLogger
 	repository userRepo.Repository
 }
 
-func NewService(repo userRepo.Repository) *service {
+func NewService(repo userRepo.Repository, log *zap.SugaredLogger) *service {
 	return &service{
 		repository: repo,
+		log:        log,
 	}
 }

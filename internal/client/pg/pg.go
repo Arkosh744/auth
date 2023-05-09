@@ -7,6 +7,7 @@ import (
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"go.uber.org/zap"
 )
 
 type Query struct {
@@ -61,6 +62,7 @@ func (p *pg) ScanAllContext(ctx context.Context, dest interface{}, q Query, args
 }
 
 type pg struct {
+	log     *zap.SugaredLogger
 	pgxPool *pgxpool.Pool
 }
 
@@ -75,13 +77,19 @@ func (p *pg) Ping(ctx context.Context) error {
 }
 
 func (p *pg) ExecContext(ctx context.Context, q Query, args ...interface{}) (pgconn.CommandTag, error) {
+	p.log.Debugf("%s; %s", q.QueryRaw, args)
+
 	return p.pgxPool.Exec(ctx, q.QueryRaw, args...)
 }
 
 func (p *pg) QueryContext(ctx context.Context, q Query, args ...interface{}) (pgx.Rows, error) {
+	p.log.Debugf("%s; %s", q.QueryRaw, args)
+
 	return p.pgxPool.Query(ctx, q.QueryRaw, args...)
 }
 
 func (p *pg) QueryRowContext(ctx context.Context, q Query, args ...interface{}) pgx.Row {
+	p.log.Debugf("%s; %s", q.QueryRaw, args)
+
 	return p.pgxPool.QueryRow(ctx, q.QueryRaw, args...)
 }

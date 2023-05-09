@@ -7,6 +7,7 @@ import (
 	"github.com/Arkosh744/auth-grpc/internal/model"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
+	"go.uber.org/zap"
 )
 
 var _ Repository = (*repository)(nil)
@@ -23,12 +24,14 @@ type Repository interface {
 }
 
 type repository struct {
+	log    *zap.SugaredLogger
 	client pg.Client
 }
 
-func NewRepository(client pg.Client) *repository {
+func NewRepository(client pg.Client, log *zap.SugaredLogger) *repository {
 	return &repository{
 		client: client,
+		log:    log,
 	}
 }
 

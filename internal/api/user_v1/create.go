@@ -17,7 +17,7 @@ import (
 func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*emptypb.Empty, error) {
 	err := validateCreateRequest(req)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %s", err)
 	}
 
 	user := converter.ToUser(req)
@@ -32,6 +32,7 @@ func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*
 
 	err = i.userService.Create(ctx, user)
 	if err != nil {
+		i.log.Error("error create user: %v", err)
 		if status.Code(err) == codes.Unknown {
 			return nil, status.Errorf(codes.Internal, "error create user: %v", err)
 		}

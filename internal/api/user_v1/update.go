@@ -14,13 +14,13 @@ import (
 )
 
 func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (*emptypb.Empty, error) {
-	err := validateUpdateRequest(req)
-	if err != nil {
+	if err := validateUpdateRequest(req); err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %v", err)
 	}
 
-	if err = i.userService.Update(ctx, req.GetUsername(), converter.ToUpdateUser(req)); err != nil {
+	if err := i.userService.Update(ctx, req.GetUsername(), converter.ToUpdateUser(req)); err != nil {
 		if status.Code(err) == codes.Unknown {
+			i.log.Error("error update user", "error", err)
 			return nil, status.Errorf(codes.Internal, "error update user: %v", err)
 		}
 

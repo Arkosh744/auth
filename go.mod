@@ -1,4 +1,4 @@
-module github.com/Arkosh744/auth-grpc
+module github.com/Arkosh744/auth-service-api
 
 go 1.20
 

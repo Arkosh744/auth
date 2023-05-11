@@ -3,8 +3,8 @@ package user_v1
 import (
 	"context"
 
-	converter "github.com/Arkosh744/auth-grpc/internal/converter/user"
-	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
+	converter "github.com/Arkosh744/auth-service-api/internal/converter/user"
+	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 

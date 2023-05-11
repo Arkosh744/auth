@@ -3,9 +3,9 @@ package user
 import (
 	"strings"
 
-	"github.com/Arkosh744/auth-grpc/internal/client/pg"
-	"github.com/Arkosh744/auth-grpc/internal/model"
-	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
+	"github.com/Arkosh744/auth-service-api/internal/client/pg"
+	"github.com/Arkosh744/auth-service-api/internal/model"
+	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

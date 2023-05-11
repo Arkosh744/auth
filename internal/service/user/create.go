@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"github.com/Arkosh744/auth-grpc/internal/model"
+	"github.com/Arkosh744/auth-service-api/internal/model"
 )
 
 func (s *service) Create(ctx context.Context, user *model.User) error {

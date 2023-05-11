@@ -3,12 +3,12 @@ package app
 import (
 	"context"
 
-	userV1 "github.com/Arkosh744/auth-grpc/internal/api/user_v1"
-	"github.com/Arkosh744/auth-grpc/internal/client/pg"
-	"github.com/Arkosh744/auth-grpc/internal/closer"
-	"github.com/Arkosh744/auth-grpc/internal/config"
-	userRepo "github.com/Arkosh744/auth-grpc/internal/repo/user"
-	userService "github.com/Arkosh744/auth-grpc/internal/service/user"
+	userV1 "github.com/Arkosh744/auth-service-api/internal/api/user_v1"
+	"github.com/Arkosh744/auth-service-api/internal/client/pg"
+	"github.com/Arkosh744/auth-service-api/internal/closer"
+	"github.com/Arkosh744/auth-service-api/internal/config"
+	userRepo "github.com/Arkosh744/auth-service-api/internal/repo/user"
+	userService "github.com/Arkosh744/auth-service-api/internal/service/user"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
 )

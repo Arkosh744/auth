@@ -3,7 +3,7 @@ package user_v1
 import (
 	"context"
 
-	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
+	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"

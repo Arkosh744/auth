@@ -3,9 +3,9 @@ package user
 import (
 	"context"
 
-	"github.com/Arkosh744/auth-grpc/internal/client/pg"
-	"github.com/Arkosh744/auth-grpc/internal/model"
-	userRepo "github.com/Arkosh744/auth-grpc/internal/repo/user"
+	"github.com/Arkosh744/auth-service-api/internal/client/pg"
+	"github.com/Arkosh744/auth-service-api/internal/model"
+	userRepo "github.com/Arkosh744/auth-service-api/internal/repo/user"
 	"go.uber.org/zap"
 )
 

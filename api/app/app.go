@@ -5,9 +5,9 @@ import (
 	"log"
 	"net"
 
-	"github.com/Arkosh744/auth-grpc/internal/closer"
-	"github.com/Arkosh744/auth-grpc/internal/config"
-	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
+	"github.com/Arkosh744/auth-service-api/internal/closer"
+	"github.com/Arkosh744/auth-service-api/internal/config"
+	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"

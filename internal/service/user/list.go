@@ -3,8 +3,8 @@ package user
 import (
 	"context"
 
-	"github.com/Arkosh744/auth-grpc/internal/client/pg"
-	"github.com/Arkosh744/auth-grpc/internal/model"
+	"github.com/Arkosh744/auth-service-api/internal/client/pg"
+	"github.com/Arkosh744/auth-service-api/internal/model"
 )
 
 func (s *service) List(ctx context.Context) ([]*model.User, *pg.Records, error) {

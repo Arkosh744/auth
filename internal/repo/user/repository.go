@@ -7,7 +7,6 @@ import (
 	"github.com/Arkosh744/auth-service-api/internal/model"
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
-	"go.uber.org/zap"
 )
 
 var _ Repository = (*repository)(nil)
@@ -24,7 +23,6 @@ type Repository interface {
 }
 
 type repository struct {
-	log    *zap.SugaredLogger
 	client pg.Client
 }
 

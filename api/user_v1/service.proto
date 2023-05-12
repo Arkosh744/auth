@@ -23,7 +23,7 @@ message UserInfo {
 }
 
 enum Role {
-  UNKNOWN = 0;
+  NULL = 0;
   ADMIN = 1;
   USER = 2;
 }
@@ -47,8 +47,6 @@ message GetResponse {
 
 message ListResponse {
   repeated UserInfo users = 1;
-  int32 found = 2;
-  int32 total = 3;
 }
 
 message UpdateRequest {
@@ -57,7 +55,7 @@ message UpdateRequest {
   google.protobuf.StringValue new_username = 2;
   google.protobuf.StringValue new_email = 3;
   google.protobuf.StringValue new_password = 4;
-  google.protobuf.StringValue new_role = 5;
+  Role  new_role = 5;
 }
 
 message DeleteRequest {

@@ -1,7 +1,6 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/kelseyhightower/envconfig"
@@ -35,10 +34,6 @@ func NewPGConfig() (*pgConfig, error) {
 
 	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.DB, cfg.User, cfg.Password, cfg.SSL)
-
-	if cfg.Host == "" || cfg.Port == "" || cfg.DB == "" || cfg.User == "" || cfg.Password == "" || cfg.SSL == "" {
-		return nil, errors.New("DSN is not set")
-	}
 
 	return &pgConfig{dsn: dsn}, nil
 }

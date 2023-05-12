@@ -1,13 +1,14 @@
 package config
 
 import (
-	"github.com/kelseyhightower/envconfig"
+	"fmt"
+	"os"
 )
 
 var _ GRPCConfig = (*grpcConfig)(nil)
 
 const (
-	grpcEnvPrefix = "GRPC"
+	grpcEnvPrefix = "GRPC_PORT"
 )
 
 type GRPCConfig interface {
@@ -15,19 +16,18 @@ type GRPCConfig interface {
 }
 
 type grpcConfig struct {
-	Port string `required:"true"`
+	port string
 }
 
 func NewGRPCConfig() (*grpcConfig, error) {
-	var cfg grpcConfig
-	err := envconfig.Process(grpcEnvPrefix, &cfg)
-	if err != nil {
-		return nil, err
+	port := os.Getenv(grpcEnvPrefix)
+	if port == "" {
+		return nil, fmt.Errorf("grpc port is not set")
 	}
 
-	return &cfg, nil
+	return &grpcConfig{port: port}, nil
 }
 
 func (c *grpcConfig) GetPort() string {
-	return c.Port
+	return c.port
 }

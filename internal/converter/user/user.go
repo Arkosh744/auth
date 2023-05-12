@@ -3,13 +3,12 @@ package user
 import (
 	"strings"
 
-	"github.com/Arkosh744/auth-service-api/internal/client/pg"
 	"github.com/Arkosh744/auth-service-api/internal/model"
 	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-func ToUserRole(role desc.Role) model.Role {
+func ToRole(role desc.Role) string {
 	switch role {
 	case desc.Role_ADMIN:
 		return model.RoleAdmin
@@ -20,20 +19,31 @@ func ToUserRole(role desc.Role) model.Role {
 	}
 }
 
+func ToRoleDesc(role string) desc.Role {
+	switch role {
+	case model.RoleAdmin:
+		return desc.Role_ADMIN
+	case model.RoleUser:
+		return desc.Role_USER
+	default:
+		return desc.Role_NULL
+	}
+}
+
 func ToUser(user *desc.CreateRequest) *model.User {
 	return &model.User{
 		Username: user.GetUser().GetUsername(),
 		Email:    strings.ToLower(strings.TrimSpace(user.GetUser().GetEmail())),
 		Password: user.GetUser().GetUsername(),
-		Role:     ToUserRole(user.GetUser().GetRole()),
+		Role:     ToRole(user.GetUser().GetRole()),
 	}
 }
 
-func ToUpdateUser(req *desc.UpdateRequest) *model.UpdateUser {
+func ToUserUpdate(req *desc.UpdateRequest) *model.UpdateUser {
 	user := &model.UpdateUser{}
 
-	if req.GetNewRole() != nil {
-		user.Role.String = model.StringToRole(req.GetNewRole().GetValue()).String()
+	if req.GetNewRole() != desc.Role_NULL {
+		user.Role.String = ToRole(req.GetNewRole())
 		user.Role.Valid = true
 	}
 
@@ -55,30 +65,26 @@ func ToUpdateUser(req *desc.UpdateRequest) *model.UpdateUser {
 	return user
 }
 
-func ToGetResponse(user *model.User) *desc.GetResponse {
+func ToUserGetDesc(user *model.User) *desc.GetResponse {
 	return &desc.GetResponse{
 		User: &desc.UserInfo{
 			Username: user.Username,
 			Email:    user.Email,
-			Role:     desc.Role(user.Role)},
+			Role:     ToRoleDesc(user.Role)},
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}
 }
 
-func ToListResponse(users []*model.User, records *pg.Records) *desc.ListResponse {
+func ToUserListDesc(users []*model.User) *desc.ListResponse {
 	var list []*desc.UserInfo
 
 	for _, user := range users {
 		list = append(list, &desc.UserInfo{
 			Username: user.Username,
 			Email:    user.Email,
-			Role:     desc.Role(user.Role)})
+			Role:     ToRoleDesc(user.Role)})
 	}
 
-	return &desc.ListResponse{
-		Users: list,
-		Found: records.Found,
-		Total: records.Total,
-	}
+	return &desc.ListResponse{Users: list}
 }

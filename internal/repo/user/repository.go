@@ -17,7 +17,7 @@ const tableName = "users"
 type Repository interface {
 	Create(context.Context, *model.User) error
 	Get(ctx context.Context, username string) (*model.User, error)
-	List(ctx context.Context) ([]*model.User, *pg.Records, error)
+	List(ctx context.Context) ([]*model.User, error)
 	ExistsNameEmail(ctx context.Context, user *model.UserIdentifier) (model.ExistsStatus, error)
 	Update(ctx context.Context, username string, user *model.UpdateUser) error
 	Delete(ctx context.Context, username string) error
@@ -28,10 +28,9 @@ type repository struct {
 	client pg.Client
 }
 
-func NewRepository(client pg.Client, log *zap.SugaredLogger) *repository {
+func NewRepository(client pg.Client) *repository {
 	return &repository{
 		client: client,
-		log:    log,
 	}
 }
 
@@ -114,7 +113,7 @@ func (r *repository) Get(ctx context.Context, username string) (*model.User, err
 	return &user, nil
 }
 
-func (r *repository) List(ctx context.Context) ([]*model.User, *pg.Records, error) {
+func (r *repository) List(ctx context.Context) ([]*model.User, error) {
 	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at").
 		From(tableName).
 		Where("deleted_at IS NULL").
@@ -122,7 +121,7 @@ func (r *repository) List(ctx context.Context) ([]*model.User, *pg.Records, erro
 
 	query, v, err := builder.ToSql()
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	q := pg.Query{
@@ -132,16 +131,10 @@ func (r *repository) List(ctx context.Context) ([]*model.User, *pg.Records, erro
 
 	var users = make([]*model.User, 0)
 	if err = r.client.PG().ScanAllContext(ctx, &users, q, v...); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	// don't have filters so found and total will be the same
-	records := &pg.Records{
-		Found: int32(len(users)),
-		Total: int32(len(users)),
-	}
-
-	return users, records, nil
+	return users, nil
 }
 
 func (r *repository) Update(ctx context.Context, username string, user *model.UpdateUser) error {

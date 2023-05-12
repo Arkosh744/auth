@@ -9,12 +9,10 @@ import (
 )
 
 func (i *Implementation) List(ctx context.Context, _ *emptypb.Empty) (*desc.ListResponse, error) {
-	users, records, err := i.userService.List(ctx)
+	users, err := i.userService.List(ctx)
 	if err != nil {
-		i.log.Error("error list users", "error", err)
-
 		return nil, err
 	}
 
-	return converter.ToListResponse(users, records), nil
+	return converter.ToUserListDesc(users), nil
 }

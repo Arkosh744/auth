@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	converter "github.com/Arkosh744/auth-service-api/internal/converter/user"
-	"github.com/Arkosh744/auth-service-api/internal/model"
 	"github.com/Arkosh744/auth-service-api/internal/pkg/validator"
 	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	"google.golang.org/grpc/codes"
@@ -18,9 +17,8 @@ func (i *Implementation) Update(ctx context.Context, req *desc.UpdateRequest) (*
 		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %v", err)
 	}
 
-	if err := i.userService.Update(ctx, req.GetUsername(), converter.ToUpdateUser(req)); err != nil {
+	if err := i.userService.Update(ctx, req.GetUsername(), converter.ToUserUpdate(req)); err != nil {
 		if status.Code(err) == codes.Unknown {
-			i.log.Error("error update user", "error", err)
 			return nil, status.Errorf(codes.Internal, "error update user: %v", err)
 		}
 
@@ -44,8 +42,8 @@ func validateUpdateRequest(req *desc.UpdateRequest) error {
 		return fmt.Errorf(ErrNotValidUsername)
 	}
 
-	if req.GetNewRole() != nil && model.StringToRole(req.GetNewRole().GetValue()) == model.RoleUnknown {
-		return fmt.Errorf("invalid role provided: %v", req.GetNewRole().GetValue())
+	if req.GetNewRole() == desc.Role_NULL {
+		return fmt.Errorf("invalid role provided: %v", req.GetNewRole())
 	}
 
 	return nil

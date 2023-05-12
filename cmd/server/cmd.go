@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	app "github.com/Arkosh744/auth-service-api/api/app"
+	"github.com/Arkosh744/auth-service-api/api/app"
 )
 
 func main() {

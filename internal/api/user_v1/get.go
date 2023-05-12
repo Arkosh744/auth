@@ -13,13 +13,11 @@ func (i *Implementation) Get(ctx context.Context, req *desc.GetRequest) (*desc.G
 	user, err := i.userService.Get(ctx, req.GetUsername())
 	if err != nil {
 		if status.Code(err) == codes.Unknown {
-			i.log.Error("error get user", "error", err)
-
 			return nil, status.Errorf(codes.Internal, "error update user: %v", err)
 		}
 
 		return nil, err
 	}
 
-	return converter.ToGetResponse(user), nil
+	return converter.ToUserGetDesc(user), nil
 }

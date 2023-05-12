@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+	"github.com/Arkosh744/auth-service-api/internal/logger"
 
 	"github.com/Arkosh744/auth-service-api/internal/model"
 	"github.com/jackc/pgx/v4"
@@ -18,6 +19,7 @@ func (s *service) Update(ctx context.Context, username string, user *model.Updat
 		if err == pgx.ErrNoRows {
 			return status.Errorf(codes.NotFound, "error: %v", ErrNotFound)
 		}
+		logger.Log.Error("error update user: %v", err)
 
 		return err
 	}

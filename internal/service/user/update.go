@@ -2,8 +2,9 @@ package user
 
 import (
 	"context"
+	"github.com/Arkosh744/auth-service-api/internal/log"
 
-	"github.com/Arkosh744/auth-grpc/internal/model"
+	"github.com/Arkosh744/auth-service-api/internal/model"
 	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,6 +19,7 @@ func (s *service) Update(ctx context.Context, username string, user *model.Updat
 		if err == pgx.ErrNoRows {
 			return status.Errorf(codes.NotFound, "error: %v", ErrNotFound)
 		}
+		log.Errorf("error update user: %v", err)
 
 		return err
 	}

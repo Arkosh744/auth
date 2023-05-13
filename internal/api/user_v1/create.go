@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	converter "github.com/Arkosh744/auth-grpc/internal/converter/user"
-	"github.com/Arkosh744/auth-grpc/internal/model"
-	"github.com/Arkosh744/auth-grpc/internal/pkg/encrypt"
-	"github.com/Arkosh744/auth-grpc/internal/pkg/validator"
-	desc "github.com/Arkosh744/auth-grpc/pkg/user_v1"
+	converter "github.com/Arkosh744/auth-service-api/internal/converter/user"
+	"github.com/Arkosh744/auth-service-api/internal/model"
+	"github.com/Arkosh744/auth-service-api/internal/pkg/encrypt"
+	"github.com/Arkosh744/auth-service-api/internal/pkg/validator"
+	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -17,7 +17,7 @@ import (
 func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*emptypb.Empty, error) {
 	err := validateCreateRequest(req)
 	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %s", err)
 	}
 
 	user := converter.ToUser(req)
@@ -57,10 +57,6 @@ func validateCreateRequest(req *desc.CreateRequest) error {
 
 	if !validator.IsUsernameValid(req.GetUser().GetUsername()) {
 		return fmt.Errorf(ErrNotValidUsername)
-	}
-
-	if model.StringToRole(req.GetUser().GetRole()) == model.RoleUnknown {
-		return fmt.Errorf("invalid role provided: %v", req.GetUser().GetRole())
 	}
 
 	return nil

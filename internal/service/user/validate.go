@@ -3,7 +3,7 @@ package user
 import (
 	"context"
 
-	"github.com/Arkosh744/auth-grpc/internal/model"
+	"github.com/Arkosh744/auth-service-api/internal/model"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

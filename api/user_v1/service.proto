@@ -5,11 +5,18 @@ package user_v1;
 import "google/protobuf/timestamp.proto";
 import "google/protobuf/wrappers.proto";
 import "google/protobuf/empty.proto";
+import "validate/validate.proto";
+import "google/api/annotations.proto";
 
 option go_package = "github.com/Arkosh744/auth-grpc/pkg/user_v1;user_v1";
 
 service User {
-  rpc Create(CreateRequest) returns (google.protobuf.Empty);
+  rpc Create(CreateRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/user/v1/create"
+      body: "*"
+    };
+  };
   rpc Get(GetRequest) returns (GetResponse);
   rpc List(google.protobuf.Empty) returns (ListResponse);
   rpc Update(UpdateRequest) returns (google.protobuf.Empty);
@@ -17,7 +24,7 @@ service User {
 }
 
 message UserInfo {
-  string username = 1;
+  string username = 1 [(validate.rules).string = {min_len: 3, max_len: 32}];
   string email = 2;
   Role role = 3;
 }

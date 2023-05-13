@@ -2,8 +2,13 @@ package app
 
 import (
 	"context"
+	"github.com/Arkosh744/auth-service-api/internal/interceptor"
 	"github.com/Arkosh744/auth-service-api/internal/log"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc/credentials/insecure"
 	"net"
+	"net/http"
+	"sync"
 
 	"github.com/Arkosh744/auth-service-api/internal/closer"
 	"github.com/Arkosh744/auth-service-api/internal/config"
@@ -15,6 +20,7 @@ import (
 type App struct {
 	serviceProvider *serviceProvider
 	grpcServer      *grpc.Server
+	httpServer      *http.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -34,10 +40,28 @@ func (app *App) Run() error {
 		closer.Wait()
 	}()
 
-	err := app.RunGrpcServer()
-	if err != nil {
-		return err
-	}
+	wg := sync.WaitGroup{}
+	wg.Add(2)
+
+	go func() {
+		defer wg.Done()
+
+		err := app.RunGrpcServer()
+		if err != nil {
+			log.Fatalf("failed to run grpc server: %v", err)
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		err := app.RunHTTPServer()
+		if err != nil {
+			log.Fatalf("failed to run http server: %v", err)
+		}
+	}()
+
+	wg.Wait()
 
 	return nil
 }
@@ -48,6 +72,7 @@ func (app *App) initDeps(ctx context.Context) error {
 		log.InitLogger,
 		app.initServiceProvider,
 		app.initGrpcServer,
+		app.initHTTPServer,
 	}
 
 	for _, init := range inits {
@@ -66,7 +91,8 @@ func (app *App) initServiceProvider(_ context.Context) error {
 }
 
 func (app *App) initGrpcServer(ctx context.Context) error {
-	app.grpcServer = grpc.NewServer()
+	app.grpcServer = grpc.NewServer(
+		grpc.UnaryInterceptor(interceptor.ValidateInterceptor))
 	reflection.Register(app.grpcServer)
 
 	desc.RegisterUserServer(app.grpcServer, app.serviceProvider.GetUserImpl(ctx))
@@ -74,13 +100,46 @@ func (app *App) initGrpcServer(ctx context.Context) error {
 	return nil
 }
 
+func (app *App) initHTTPServer(ctx context.Context) error {
+	mux := runtime.NewServeMux()
+
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	}
+
+	err := desc.RegisterUserHandlerFromEndpoint(ctx, mux, app.serviceProvider.GetGRPCConfig().GetHost(), opts)
+	if err != nil {
+		return err
+	}
+
+	app.httpServer = &http.Server{
+		Addr:    app.serviceProvider.GetHTTPConfig().GetHost(),
+		Handler: mux,
+	}
+
+	return nil
+}
+
 func (app *App) RunGrpcServer() error {
-	list, err := net.Listen("tcp", ":"+app.serviceProvider.GetGRPCConfig().GetPort())
+	log.Infof("GRPC server listening on port %s", app.serviceProvider.GetGRPCConfig().GetHost())
+
+	list, err := net.Listen("tcp", app.serviceProvider.GetGRPCConfig().GetHost())
 	if err != nil {
 		return err
 	}
 
 	err = app.grpcServer.Serve(list)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (app *App) RunHTTPServer() error {
+	log.Infof("HTTP server listening on port %s", app.serviceProvider.GetHTTPConfig().GetHost())
+
+	err := app.httpServer.ListenAndServe()
 	if err != nil {
 		return err
 	}

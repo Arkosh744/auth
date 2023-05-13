@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/logger"
+	"github.com/Arkosh744/auth-service-api/internal/log"
 
 	userV1 "github.com/Arkosh744/auth-service-api/internal/api/user_v1"
 	"github.com/Arkosh744/auth-service-api/internal/client/pg"
@@ -33,7 +33,7 @@ func (s *serviceProvider) GetPGConfig() config.PGConfig {
 	if s.pgConfig == nil {
 		cfg, err := config.NewPGConfig()
 		if err != nil {
-			logger.Log.Fatal("failed to get pg config", zap.Error(err))
+			log.Fatalf("failed to get pg config", zap.Error(err))
 		}
 
 		s.pgConfig = cfg
@@ -46,7 +46,7 @@ func (s *serviceProvider) GetGRPCConfig() config.GRPCConfig {
 	if s.grpcConfig == nil {
 		cfg, err := config.NewGRPCConfig()
 		if err != nil {
-			logger.Log.Fatal("failed to get grpc config", zap.Error(err))
+			log.Fatalf("failed to get grpc config", zap.Error(err))
 		}
 
 		s.grpcConfig = cfg
@@ -59,16 +59,16 @@ func (s *serviceProvider) GetPGClient(ctx context.Context) pg.Client {
 	if s.pgClient == nil {
 		pgCfg, err := pgxpool.ParseConfig(s.GetPGConfig().DSN())
 		if err != nil {
-			logger.Log.Fatal("failed to parse pg config", zap.Error(err))
+			log.Fatalf("failed to parse pg config", zap.Error(err))
 		}
 
 		cl, err := pg.NewClient(ctx, pgCfg)
 		if err != nil {
-			logger.Log.Fatal("failed to get pg client", zap.Error(err))
+			log.Fatalf("failed to get pg client", zap.Error(err))
 		}
 
 		if cl.PG().Ping(ctx) != nil {
-			logger.Log.Fatal("failed to ping pg", zap.Error(err))
+			log.Fatalf("failed to ping pg", zap.Error(err))
 		}
 
 		closer.Add(cl.Close)

@@ -23,7 +23,7 @@ message UserInfo {
 }
 
 enum Role {
-  NULL = 0;
+  UNKNOWN = 0;
   ADMIN = 1;
   USER = 2;
 }

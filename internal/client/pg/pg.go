@@ -2,7 +2,7 @@ package pg
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/logger"
+	"github.com/Arkosh744/auth-service-api/internal/log"
 
 	"github.com/georgysavva/scany/pgxscan"
 	"github.com/jackc/pgconn"
@@ -76,19 +76,19 @@ func (p *pg) Ping(ctx context.Context) error {
 }
 
 func (p *pg) ExecContext(ctx context.Context, q Query, args ...interface{}) (pgconn.CommandTag, error) {
-	logger.Log.Debugf("%s; %s", q.QueryRaw, args)
+	log.Debugf("%s; %s", q.QueryRaw, args)
 
 	return p.pgxPool.Exec(ctx, q.QueryRaw, args...)
 }
 
 func (p *pg) QueryContext(ctx context.Context, q Query, args ...interface{}) (pgx.Rows, error) {
-	logger.Log.Debugf("%s; %s", q.QueryRaw, args)
+	log.Debugf("%s; %s", q.QueryRaw, args)
 
 	return p.pgxPool.Query(ctx, q.QueryRaw, args...)
 }
 
 func (p *pg) QueryRowContext(ctx context.Context, q Query, args ...interface{}) pgx.Row {
-	logger.Log.Debugf("%s; %s", q.QueryRaw, args)
+	log.Debugf("%s; %s", q.QueryRaw, args)
 
 	return p.pgxPool.QueryRow(ctx, q.QueryRaw, args...)
 }

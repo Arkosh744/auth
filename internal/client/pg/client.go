@@ -2,7 +2,7 @@ package pg
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/logger"
+	"github.com/Arkosh744/auth-service-api/internal/log"
 
 	"github.com/jackc/pgx/v4/pgxpool"
 	"go.uber.org/zap"
@@ -22,10 +22,10 @@ type client struct {
 func NewClient(ctx context.Context, pgCfg *pgxpool.Config) (Client, error) {
 	dbc, err := pgxpool.ConnectConfig(ctx, pgCfg)
 	if err != nil {
-		logger.Log.Error("failed to connect to postgres", zap.Error(err))
+		log.Errorf("failed to connect to postgres", zap.Error(err))
 		return nil, err
 	}
-	logger.Log.Info("pg connected successfully")
+	log.Info("pg connected successfully")
 
 	return &client{pg: &pg{pgxPool: dbc}}, nil
 }

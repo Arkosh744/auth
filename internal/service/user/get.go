@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/logger"
+	"github.com/Arkosh744/auth-service-api/internal/log"
 
 	"github.com/Arkosh744/auth-service-api/internal/model"
 	"github.com/jackc/pgx/v4"
@@ -16,7 +16,7 @@ func (s *service) Get(ctx context.Context, username string) (user *model.User, e
 		if err == pgx.ErrNoRows {
 			return nil, status.Errorf(codes.NotFound, "error: %v", ErrNotFound)
 		}
-		logger.Log.Error("error get user: %v", err)
+		log.Errorf("error get user: %v", err)
 
 		return nil, err
 	}

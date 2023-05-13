@@ -26,7 +26,7 @@ func ToRoleDesc(role string) desc.Role {
 	case model.RoleUser:
 		return desc.Role_USER
 	default:
-		return desc.Role_NULL
+		return desc.Role_UNKNOWN
 	}
 }
 
@@ -42,7 +42,7 @@ func ToUser(user *desc.CreateRequest) *model.User {
 func ToUserUpdate(req *desc.UpdateRequest) *model.UpdateUser {
 	user := &model.UpdateUser{}
 
-	if req.GetNewRole() != desc.Role_NULL {
+	if req.GetNewRole() != desc.Role_UNKNOWN {
 		user.Role.String = ToRole(req.GetNewRole())
 		user.Role.Valid = true
 	}

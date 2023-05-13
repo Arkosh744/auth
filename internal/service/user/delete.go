@@ -2,7 +2,7 @@ package user
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/logger"
+	"github.com/Arkosh744/auth-service-api/internal/log"
 
 	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc/codes"
@@ -15,7 +15,7 @@ func (s *service) Delete(ctx context.Context, username string) error {
 		if err == pgx.ErrNoRows {
 			return status.Errorf(codes.NotFound, "error: %v", ErrNotFound)
 		}
-		logger.Log.Error("error delete user: %v", err)
+		log.Errorf("error delete user: %v", err)
 
 		return err
 	}

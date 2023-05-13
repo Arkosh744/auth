@@ -2,7 +2,7 @@ package app
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/logger"
+	"github.com/Arkosh744/auth-service-api/internal/log"
 	"net"
 
 	"github.com/Arkosh744/auth-service-api/internal/closer"
@@ -45,7 +45,7 @@ func (app *App) Run() error {
 func (app *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		config.Init,
-		logger.InitLogger,
+		log.InitLogger,
 		app.initServiceProvider,
 		app.initGrpcServer,
 	}

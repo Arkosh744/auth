@@ -42,7 +42,7 @@ func validateUpdateRequest(req *desc.UpdateRequest) error {
 		return fmt.Errorf(ErrNotValidUsername)
 	}
 
-	if req.GetNewRole() == desc.Role_NULL {
+	if req.GetNewRole() == desc.Role_UNKNOWN {
 		return fmt.Errorf("invalid role provided: %v", req.GetNewRole())
 	}
 

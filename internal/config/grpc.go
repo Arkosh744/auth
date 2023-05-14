@@ -28,7 +28,7 @@ func NewGRPCConfig() (*grpcConfig, error) {
 		return nil, fmt.Errorf("grpc addr is not set")
 	}
 
-	return &grpcConfig{port: port}, nil
+	return &grpcConfig{host: host, port: port}, nil
 }
 
 func (c *grpcConfig) GetHost() string {

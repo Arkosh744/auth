@@ -28,7 +28,7 @@ func NewHTTPConfig() (*httpConfig, error) {
 		return nil, fmt.Errorf("http addr is not set")
 	}
 
-	return &httpConfig{port: port}, nil
+	return &httpConfig{host: host, port: port}, nil
 }
 
 func (c *httpConfig) GetHost() string {

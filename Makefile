@@ -14,7 +14,13 @@ install-go-deps:
 	GOBIN=$(LOCAL_BIN) go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2@v2.15.2
 
 generate:
+	mkdir -p pkg/swagger
+	make generate-user-api
+	statik -src=pkg/swagger -include='*.css,*.html,*.js,*.json,*.png'
+
+generate-user-api:
 	mkdir -p pkg/user_v1
+	mkdir -p pkg/swagger
 	protoc --proto_path api/user_v1 --proto_path vendor.protogen \
 	--go_out=pkg/user_v1 --go_opt=paths=source_relative \
 	--plugin=protoc-gen-go=bin/protoc-gen-go \
@@ -48,4 +54,10 @@ vendor-proto:
 			mkdir -p  vendor.protogen/google/ &&\
 			mv vendor.protogen/googleapis/google/api vendor.protogen/google &&\
 			rm -rf vendor.protogen/googleapis ;\
+		fi
+		@if [ ! -d vendor.protogen/protoc-gen-openapiv2 ]; then \
+			mkdir -p vendor.protogen/protoc-gen-openapiv2/options &&\
+			git clone https://github.com/grpc-ecosystem/grpc-gateway vendor.protogen/openapiv2 &&\
+			mv vendor.protogen/openapiv2/protoc-gen-openapiv2/options/*.proto vendor.protogen/protoc-gen-openapiv2/options &&\
+			rm -rf vendor.protogen/openapiv2 ;\
 		fi

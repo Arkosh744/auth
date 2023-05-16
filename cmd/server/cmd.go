@@ -2,9 +2,8 @@ package main
 
 import (
 	"context"
+	"github.com/Arkosh744/auth-service-api/internal/app"
 	"log"
-
-	"github.com/Arkosh744/auth-service-api/api/app"
 )
 
 func main() {

@@ -82,6 +82,93 @@ func (m *UserInfo) validate(all bool) error {
 
 	// no validation rules for Role
 
+	switch v := m.Specialization.(type) {
+	case *UserInfo_Engineer:
+		if v == nil {
+			err := UserInfoValidationError{
+				field:  "Specialization",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetEngineer()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UserInfoValidationError{
+						field:  "Engineer",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UserInfoValidationError{
+						field:  "Engineer",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetEngineer()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UserInfoValidationError{
+					field:  "Engineer",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	case *UserInfo_Manager:
+		if v == nil {
+			err := UserInfoValidationError{
+				field:  "Specialization",
+				reason: "oneof value cannot be a typed-nil",
+			}
+			if !all {
+				return err
+			}
+			errors = append(errors, err)
+		}
+
+		if all {
+			switch v := interface{}(m.GetManager()).(type) {
+			case interface{ ValidateAll() error }:
+				if err := v.ValidateAll(); err != nil {
+					errors = append(errors, UserInfoValidationError{
+						field:  "Manager",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			case interface{ Validate() error }:
+				if err := v.Validate(); err != nil {
+					errors = append(errors, UserInfoValidationError{
+						field:  "Manager",
+						reason: "embedded message failed validation",
+						cause:  err,
+					})
+				}
+			}
+		} else if v, ok := interface{}(m.GetManager()).(interface{ Validate() error }); ok {
+			if err := v.Validate(); err != nil {
+				return UserInfoValidationError{
+					field:  "Manager",
+					reason: "embedded message failed validation",
+					cause:  err,
+				}
+			}
+		}
+
+	default:
+		_ = v // ensures v is used
+	}
+
 	if len(errors) > 0 {
 		return UserInfoMultiError(errors)
 	}
@@ -208,6 +295,269 @@ var _ interface {
 	Cause() error
 	ErrorName() string
 } = UserInfoValidationError{}
+
+// Validate checks the field values on Engineer with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Engineer) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Engineer with the rules defined in
+// the proto definition for this message. If any rules are violated, the
+// result is a list of violation errors wrapped in EngineerMultiError, or nil
+// if none found.
+func (m *Engineer) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Engineer) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if val := m.GetLevel(); val <= 0 || val >= 10 {
+		err := EngineerValidationError{
+			field:  "Level",
+			reason: "value must be inside range (0, 10)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetCompany()); l < 3 || l > 32 {
+		err := EngineerValidationError{
+			field:  "Company",
+			reason: "value length must be between 3 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetLanguage()); l < 2 || l > 32 {
+		err := EngineerValidationError{
+			field:  "Language",
+			reason: "value length must be between 2 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return EngineerMultiError(errors)
+	}
+
+	return nil
+}
+
+// EngineerMultiError is an error wrapping multiple validation errors returned
+// by Engineer.ValidateAll() if the designated constraints aren't met.
+type EngineerMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m EngineerMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m EngineerMultiError) AllErrors() []error { return m }
+
+// EngineerValidationError is the validation error returned by
+// Engineer.Validate if the designated constraints aren't met.
+type EngineerValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e EngineerValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e EngineerValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e EngineerValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e EngineerValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e EngineerValidationError) ErrorName() string { return "EngineerValidationError" }
+
+// Error satisfies the builtin error interface
+func (e EngineerValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sEngineer.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = EngineerValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = EngineerValidationError{}
+
+// Validate checks the field values on Manager with the rules defined in the
+// proto definition for this message. If any rules are violated, the first
+// error encountered is returned, or nil if there are no violations.
+func (m *Manager) Validate() error {
+	return m.validate(false)
+}
+
+// ValidateAll checks the field values on Manager with the rules defined in the
+// proto definition for this message. If any rules are violated, the result is
+// a list of violation errors wrapped in ManagerMultiError, or nil if none found.
+func (m *Manager) ValidateAll() error {
+	return m.validate(true)
+}
+
+func (m *Manager) validate(all bool) error {
+	if m == nil {
+		return nil
+	}
+
+	var errors []error
+
+	if val := m.GetLevel(); val <= 0 || val >= 10 {
+		err := ManagerValidationError{
+			field:  "Level",
+			reason: "value must be inside range (0, 10)",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetCompany()); l < 3 || l > 32 {
+		err := ManagerValidationError{
+			field:  "Company",
+			reason: "value length must be between 3 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if l := utf8.RuneCountInString(m.GetDepartment()); l < 2 || l > 32 {
+		err := ManagerValidationError{
+			field:  "Department",
+			reason: "value length must be between 2 and 32 runes, inclusive",
+		}
+		if !all {
+			return err
+		}
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return ManagerMultiError(errors)
+	}
+
+	return nil
+}
+
+// ManagerMultiError is an error wrapping multiple validation errors returned
+// by Manager.ValidateAll() if the designated constraints aren't met.
+type ManagerMultiError []error
+
+// Error returns a concatenation of all the error messages it wraps.
+func (m ManagerMultiError) Error() string {
+	var msgs []string
+	for _, err := range m {
+		msgs = append(msgs, err.Error())
+	}
+	return strings.Join(msgs, "; ")
+}
+
+// AllErrors returns a list of validation violation errors.
+func (m ManagerMultiError) AllErrors() []error { return m }
+
+// ManagerValidationError is the validation error returned by Manager.Validate
+// if the designated constraints aren't met.
+type ManagerValidationError struct {
+	field  string
+	reason string
+	cause  error
+	key    bool
+}
+
+// Field function returns field value.
+func (e ManagerValidationError) Field() string { return e.field }
+
+// Reason function returns reason value.
+func (e ManagerValidationError) Reason() string { return e.reason }
+
+// Cause function returns cause value.
+func (e ManagerValidationError) Cause() error { return e.cause }
+
+// Key function returns key value.
+func (e ManagerValidationError) Key() bool { return e.key }
+
+// ErrorName returns error name.
+func (e ManagerValidationError) ErrorName() string { return "ManagerValidationError" }
+
+// Error satisfies the builtin error interface
+func (e ManagerValidationError) Error() string {
+	cause := ""
+	if e.cause != nil {
+		cause = fmt.Sprintf(" | caused by: %v", e.cause)
+	}
+
+	key := ""
+	if e.key {
+		key = "key for "
+	}
+
+	return fmt.Sprintf(
+		"invalid %sManager.%s: %s%s",
+		key,
+		e.field,
+		e.reason,
+		cause)
+}
+
+var _ error = ManagerValidationError{}
+
+var _ interface {
+	Field() string
+	Reason() string
+	Key() bool
+	Cause() error
+	ErrorName() string
+} = ManagerValidationError{}
 
 // Validate checks the field values on CreateRequest with the rules defined in
 // the proto definition for this message. If any rules are violated, the first

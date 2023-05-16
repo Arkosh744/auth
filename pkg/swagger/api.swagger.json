@@ -240,6 +240,21 @@
         }
       }
     },
+    "user_v1Engineer": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "format": "int64"
+        },
+        "company": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        }
+      }
+    },
     "user_v1GetResponse": {
       "type": "object",
       "properties": {
@@ -268,6 +283,21 @@
         }
       }
     },
+    "user_v1Manager": {
+      "type": "object",
+      "properties": {
+        "level": {
+          "type": "string",
+          "format": "int64"
+        },
+        "company": {
+          "type": "string"
+        },
+        "department": {
+          "type": "string"
+        }
+      }
+    },
     "user_v1Role": {
       "type": "string",
       "enum": [
@@ -289,6 +319,12 @@
         },
         "role": {
           "$ref": "#/definitions/user_v1Role"
+        },
+        "engineer": {
+          "$ref": "#/definitions/user_v1Engineer"
+        },
+        "manager": {
+          "$ref": "#/definitions/user_v1Manager"
         }
       }
     }

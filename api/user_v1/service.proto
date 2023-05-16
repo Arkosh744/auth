@@ -65,6 +65,23 @@ message UserInfo {
   string username = 1 [(validate.rules).string = {min_len: 3, max_len: 32}];
   string email = 2 [(validate.rules).string.email = true];
   Role role = 3;
+
+  oneof specialization {
+    Engineer engineer = 6;
+    Manager manager = 7;
+  }
+}
+
+message Engineer {
+  int64 level = 1 [(validate.rules).int64.gt = 0, (validate.rules).int64.lt = 10];
+  string company = 2 [(validate.rules).string = {min_len: 3, max_len: 32}];
+  string language = 3 [(validate.rules).string = {min_len: 2, max_len: 32}];
+}
+
+message Manager {
+  int64 level = 1 [(validate.rules).int64.gt = 0, (validate.rules).int64.lt = 10];
+  string company = 2 [(validate.rules).string = {min_len: 3, max_len: 32}];
+  string department = 3 [(validate.rules).string = {min_len: 2, max_len: 32}];
 }
 
 enum Role {
@@ -80,6 +97,7 @@ message CreateRequest {
 }
 
 message GetRequest {
+  // TODO: use oneof here to get by username or email
   string username = 1;
 }
 

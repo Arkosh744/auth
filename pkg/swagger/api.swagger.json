@@ -111,6 +111,7 @@
         "parameters": [
           {
             "name": "username",
+            "description": "TODO: use oneof here to get by username or email",
             "in": "path",
             "required": true,
             "type": "string"

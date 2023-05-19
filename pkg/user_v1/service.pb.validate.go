@@ -1154,50 +1154,91 @@ func (m *UpdateRequest) validate(all bool) error {
 
 	// no validation rules for Username
 
-	if wrapper := m.GetNewUsername(); wrapper != nil {
-
-		if l := utf8.RuneCountInString(wrapper.GetValue()); l < 3 || l > 32 {
-			err := UpdateRequestValidationError{
-				field:  "NewUsername",
-				reason: "value length must be between 3 and 32 runes, inclusive",
+	if all {
+		switch v := interface{}(m.GetNewUsername()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateRequestValidationError{
+					field:  "NewUsername",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
-			if !all {
-				return err
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateRequestValidationError{
+					field:  "NewUsername",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
-			errors = append(errors, err)
 		}
-
-	}
-
-	if wrapper := m.GetNewEmail(); wrapper != nil {
-
-		if err := m._validateEmail(wrapper.GetValue()); err != nil {
-			err = UpdateRequestValidationError{
-				field:  "NewEmail",
-				reason: "value must be a valid email address",
+	} else if v, ok := interface{}(m.GetNewUsername()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateRequestValidationError{
+				field:  "NewUsername",
+				reason: "embedded message failed validation",
 				cause:  err,
 			}
-			if !all {
-				return err
-			}
-			errors = append(errors, err)
 		}
-
 	}
 
-	if wrapper := m.GetNewPassword(); wrapper != nil {
-
-		if utf8.RuneCountInString(wrapper.GetValue()) < 8 {
-			err := UpdateRequestValidationError{
-				field:  "NewPassword",
-				reason: "value length must be at least 8 runes",
+	if all {
+		switch v := interface{}(m.GetNewEmail()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateRequestValidationError{
+					field:  "NewEmail",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
-			if !all {
-				return err
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateRequestValidationError{
+					field:  "NewEmail",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
 			}
-			errors = append(errors, err)
 		}
+	} else if v, ok := interface{}(m.GetNewEmail()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateRequestValidationError{
+				field:  "NewEmail",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
+	}
 
+	if all {
+		switch v := interface{}(m.GetNewPassword()).(type) {
+		case interface{ ValidateAll() error }:
+			if err := v.ValidateAll(); err != nil {
+				errors = append(errors, UpdateRequestValidationError{
+					field:  "NewPassword",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		case interface{ Validate() error }:
+			if err := v.Validate(); err != nil {
+				errors = append(errors, UpdateRequestValidationError{
+					field:  "NewPassword",
+					reason: "embedded message failed validation",
+					cause:  err,
+				})
+			}
+		}
+	} else if v, ok := interface{}(m.GetNewPassword()).(interface{ Validate() error }); ok {
+		if err := v.Validate(); err != nil {
+			return UpdateRequestValidationError{
+				field:  "NewPassword",
+				reason: "embedded message failed validation",
+				cause:  err,
+			}
+		}
 	}
 
 	// no validation rules for NewRole
@@ -1207,56 +1248,6 @@ func (m *UpdateRequest) validate(all bool) error {
 	}
 
 	return nil
-}
-
-func (m *UpdateRequest) _validateHostname(host string) error {
-	s := strings.ToLower(strings.TrimSuffix(host, "."))
-
-	if len(host) > 253 {
-		return errors.New("hostname cannot exceed 253 characters")
-	}
-
-	for _, part := range strings.Split(s, ".") {
-		if l := len(part); l == 0 || l > 63 {
-			return errors.New("hostname part must be non-empty and cannot exceed 63 characters")
-		}
-
-		if part[0] == '-' {
-			return errors.New("hostname parts cannot begin with hyphens")
-		}
-
-		if part[len(part)-1] == '-' {
-			return errors.New("hostname parts cannot end with hyphens")
-		}
-
-		for _, r := range part {
-			if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '-' {
-				return fmt.Errorf("hostname parts can only contain alphanumeric characters or hyphens, got %q", string(r))
-			}
-		}
-	}
-
-	return nil
-}
-
-func (m *UpdateRequest) _validateEmail(addr string) error {
-	a, err := mail.ParseAddress(addr)
-	if err != nil {
-		return err
-	}
-	addr = a.Address
-
-	if len(addr) > 254 {
-		return errors.New("email addresses cannot exceed 254 characters")
-	}
-
-	parts := strings.SplitN(addr, "@", 2)
-
-	if len(parts[0]) > 64 {
-		return errors.New("email address local phrase cannot exceed 64 characters")
-	}
-
-	return m._validateHostname(parts[1])
 }
 
 // UpdateRequestMultiError is an error wrapping multiple validation errors

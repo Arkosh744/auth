@@ -38,6 +38,10 @@ func validateUpdateRequest(req *desc.UpdateRequest) error {
 		return fmt.Errorf(ErrNotValidEmail)
 	}
 
+	if req.GetNewUsername() != nil && !validator.IsUsernameValid(req.GetNewUsername().GetValue()) {
+		return fmt.Errorf(ErrNotValidUsername)
+	}
+
 	if req.GetNewRole() == desc.Role_UNKNOWN {
 		return fmt.Errorf("invalid role provided: %v", req.GetNewRole())
 	}

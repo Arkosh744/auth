@@ -40,26 +40,24 @@ func ToUserSpec(user *desc.CreateRequest) *model.UserSpec {
 		},
 	}
 
-	ToSpec(user, u)
+	ToSpec(user, &u)
 
 	return &u
 }
 
-func ToSpec(user *desc.CreateRequest, u model.UserSpec) {
-	switch user.GetUser().GetSpecialization().(type) {
+func ToSpec(user *desc.CreateRequest, u *model.UserSpec) {
+	switch spec := user.GetUser().GetSpecialization().(type) {
 	case *desc.UserInfo_Manager:
-		u.Type = model.SpecializationManager
-		u.Manager = &model.Manager{
-			Level:      user.GetUser().GetManager().GetLevel(),
-			Company:    user.GetUser().GetManager().GetCompany(),
-			Department: user.GetUser().GetManager().GetDepartment(),
+		u.Specialization = &model.Manager{
+			Level:      spec.Manager.GetLevel(),
+			Company:    spec.Manager.GetCompany(),
+			Department: spec.Manager.GetDepartment(),
 		}
 	case *desc.UserInfo_Engineer:
-		u.Type = model.SpecializationEngineer
-		u.Engineer = &model.Engineer{
-			Level:    user.GetUser().GetEngineer().GetLevel(),
-			Company:  user.GetUser().GetEngineer().GetCompany(),
-			Language: user.GetUser().GetEngineer().GetLanguage(),
+		u.Specialization = &model.Engineer{
+			Level:    spec.Engineer.GetLevel(),
+			Company:  spec.Engineer.GetCompany(),
+			Language: spec.Engineer.GetLanguage(),
 		}
 	}
 }
@@ -106,18 +104,18 @@ func ToUserGetDesc(user *model.UserSpec) *desc.GetResponse {
 }
 
 func ToSpecDesc(user *model.UserSpec, resUser *desc.UserInfo) {
-	switch user.Specialization.Type {
-	case model.SpecializationEngineer:
+	switch user.Specialization.(type) {
+	case *model.Engineer:
 		resUser.Specialization = &desc.UserInfo_Engineer{Engineer: &desc.Engineer{
-			Level:    user.Specialization.Engineer.Level,
-			Company:  user.Specialization.Engineer.Company,
-			Language: user.Specialization.Engineer.Language,
+			Level:    user.Specialization.(*model.Engineer).Level,
+			Company:  user.Specialization.(*model.Engineer).Company,
+			Language: user.Specialization.(*model.Engineer).Language,
 		}}
-	case model.SpecializationManager:
+	case *model.Manager:
 		resUser.Specialization = &desc.UserInfo_Manager{Manager: &desc.Manager{
-			Level:      user.Specialization.Manager.Level,
-			Company:    user.Specialization.Manager.Company,
-			Department: user.Specialization.Manager.Department,
+			Level:      user.Specialization.(*model.Manager).Level,
+			Company:    user.Specialization.(*model.Manager).Company,
+			Department: user.Specialization.(*model.Manager).Department,
 		}}
 	}
 }

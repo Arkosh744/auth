@@ -36,7 +36,7 @@ func (r *repository) Create(ctx context.Context, user *model.UserSpecSerialized)
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
 		Columns("username", "email", "password", "role", "specialization").
-		Values(user.Username, user.Email, user.Password, user.Role, user.SpecializationSerialized)
+		Values(user.Username, user.Email, user.Password, user.Role, user.Specialization)
 
 	query, v, err := builder.ToSql()
 	if err != nil {

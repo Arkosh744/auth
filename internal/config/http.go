@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"os"
 )
 
@@ -32,5 +33,5 @@ func NewHTTPConfig() (*httpConfig, error) {
 }
 
 func (c *httpConfig) GetHost() string {
-	return fmt.Sprintf(c.host + ":" + c.port)
+	return net.JoinHostPort(c.host, c.port)
 }

@@ -9,6 +9,10 @@ var (
 	regexEmail = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 )
 
+func IsUsernameValid(username string) bool {
+	return len(username) >= 2
+}
+
 func IsPasswordValid(password string) bool {
 	var hasUpper, hasLower bool
 	for _, c := range password {

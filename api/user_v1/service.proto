@@ -115,9 +115,9 @@ message ListResponse {
 message UpdateRequest {
   string username = 1;
 
-  google.protobuf.StringValue new_username = 2 [(validate.rules).string = {min_len: 3, max_len: 32}];
-  google.protobuf.StringValue new_email = 3 [(validate.rules).string.email = true];
-  google.protobuf.StringValue new_password = 4 [(validate.rules).string.min_len = 8];
+  google.protobuf.StringValue new_username = 2;
+  google.protobuf.StringValue new_email = 3;
+  google.protobuf.StringValue new_password = 4;
   Role  new_role = 5;
 }
 

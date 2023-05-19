@@ -46,8 +46,8 @@ func (app *App) Run() error {
 	}()
 
 	wg := sync.WaitGroup{}
+	wg.Add(3)
 
-	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
@@ -57,7 +57,6 @@ func (app *App) Run() error {
 		}
 	}()
 
-	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
@@ -67,7 +66,6 @@ func (app *App) Run() error {
 		}
 	}()
 
-	wg.Add(1)
 	go func() {
 		defer wg.Done()
 
@@ -109,7 +107,8 @@ func (app *App) initServiceProvider(_ context.Context) error {
 
 func (app *App) initGrpcServer(ctx context.Context) error {
 	app.grpcServer = grpc.NewServer(
-		grpc.UnaryInterceptor(interceptor.ValidateInterceptor))
+		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+	)
 	reflection.Register(app.grpcServer)
 
 	desc.RegisterUserServer(app.grpcServer, app.serviceProvider.GetUserImpl(ctx))

@@ -35,7 +35,7 @@ func ToUserSpec(user *desc.CreateRequest) *model.UserSpec {
 		User: model.User{
 			Username: user.GetUser().GetUsername(),
 			Email:    strings.ToLower(strings.TrimSpace(user.GetUser().GetEmail())),
-			Password: user.GetUser().GetUsername(),
+			Password: user.GetPassword(),
 			Role:     ToRole(user.GetUser().GetRole()),
 		},
 	}

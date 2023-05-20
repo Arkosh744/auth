@@ -13,7 +13,8 @@ import (
 
 	"github.com/Arkosh744/auth-service-api/internal/closer"
 	"github.com/Arkosh744/auth-service-api/internal/config"
-	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
+	descAuthV1 "github.com/Arkosh744/auth-service-api/pkg/auth_v1"
+	descUserV1 "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	_ "github.com/Arkosh744/auth-service-api/statik"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
@@ -111,7 +112,8 @@ func (app *App) initGrpcServer(ctx context.Context) error {
 	)
 	reflection.Register(app.grpcServer)
 
-	desc.RegisterUserServer(app.grpcServer, app.serviceProvider.GetUserImpl(ctx))
+	descUserV1.RegisterUserServer(app.grpcServer, app.serviceProvider.GetUserImpl(ctx))
+	descAuthV1.RegisterAuthV1Server(app.grpcServer, app.serviceProvider.GetAuthImpl(ctx))
 
 	return nil
 }
@@ -123,7 +125,7 @@ func (app *App) initHTTPServer(ctx context.Context) error {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	err := desc.RegisterUserHandlerFromEndpoint(ctx, mux, app.serviceProvider.GetGRPCConfig().GetHost(), opts)
+	err := descUserV1.RegisterUserHandlerFromEndpoint(ctx, mux, app.serviceProvider.GetGRPCConfig().GetHost(), opts)
 	if err != nil {
 		return err
 	}

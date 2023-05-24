@@ -9,7 +9,19 @@ const (
 	RoleUnknown = "unknown"
 	RoleAdmin   = "admin"
 	RoleUser    = "user"
+
+	SpecializationEngineer = "engineer"
+	SpecializationManager  = "manager"
 )
+
+const (
+	StatusNone           ExistsStatus = iota // 0
+	StatusUsernameExists                     // 1
+	StatusEmailExists                        // 2
+	StatusBothExist                          // 3
+)
+
+type ExistsStatus int
 
 type User struct {
 	ID       int64
@@ -28,12 +40,6 @@ type UserIdentifier struct {
 	Email    sql.NullString
 }
 
-type UpdateUser struct {
-	UserIdentifier
-	Password sql.NullString
-	Role     sql.NullString
-}
-
 func (u *UserIdentifier) Set(username, email string) {
 	if username != "" {
 		u.Username.String = username
@@ -46,11 +52,8 @@ func (u *UserIdentifier) Set(username, email string) {
 	}
 }
 
-type ExistsStatus int
-
-const (
-	StatusNone           ExistsStatus = iota // 0
-	StatusUsernameExists                     // 1
-	StatusEmailExists                        // 2
-	StatusBothExist                          // 3
-)
+type UpdateUser struct {
+	UserIdentifier
+	Password sql.NullString
+	Role     sql.NullString
+}

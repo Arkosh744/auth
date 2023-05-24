@@ -2,32 +2,36 @@ package config
 
 import (
 	"fmt"
+	"net"
 	"os"
 )
 
 var _ GRPCConfig = (*grpcConfig)(nil)
 
 const (
-	grpcEnvPrefix = "GRPC_PORT"
+	grpcEnvHost = "GRPC_HOST"
+	grpcEnvPort = "GRPC_PORT"
 )
 
 type GRPCConfig interface {
-	GetPort() string
+	GetHost() string
 }
 
 type grpcConfig struct {
+	host string
 	port string
 }
 
 func NewGRPCConfig() (*grpcConfig, error) {
-	port := os.Getenv(grpcEnvPrefix)
-	if port == "" {
-		return nil, fmt.Errorf("grpc port is not set")
+	host := os.Getenv(grpcEnvHost)
+	port := os.Getenv(grpcEnvPort)
+	if port == "" || host == "" {
+		return nil, fmt.Errorf("grpc addr is not set")
 	}
 
-	return &grpcConfig{port: port}, nil
+	return &grpcConfig{host: host, port: port}, nil
 }
 
-func (c *grpcConfig) GetPort() string {
-	return c.port
+func (c *grpcConfig) GetHost() string {
+	return net.JoinHostPort(c.host, c.port)
 }

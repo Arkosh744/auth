@@ -14,9 +14,9 @@ var _ Repository = (*repository)(nil)
 const tableName = "users"
 
 type Repository interface {
-	Create(context.Context, *model.User) error
-	Get(ctx context.Context, username string) (*model.User, error)
-	List(ctx context.Context) ([]*model.User, error)
+	Create(context.Context, *model.UserSpecSerialized) error
+	Get(ctx context.Context, username string) (*model.UserSpecSerialized, error)
+	List(ctx context.Context) ([]*model.UserSpecSerialized, error)
 	ExistsNameEmail(ctx context.Context, user *model.UserIdentifier) (model.ExistsStatus, error)
 	Update(ctx context.Context, username string, user *model.UpdateUser) error
 	Delete(ctx context.Context, username string) error
@@ -32,11 +32,11 @@ func NewRepository(client pg.Client) *repository {
 	}
 }
 
-func (r *repository) Create(ctx context.Context, user *model.User) error {
+func (r *repository) Create(ctx context.Context, user *model.UserSpecSerialized) error {
 	builder := sq.Insert(tableName).
 		PlaceholderFormat(sq.Dollar).
-		Columns("username", "email", "password", "role").
-		Values(user.Username, user.Email, user.Password, user.Role)
+		Columns("username", "email", "password", "role", "specialization").
+		Values(user.Username, user.Email, user.Password, user.Role, user.Specialization)
 
 	query, v, err := builder.ToSql()
 	if err != nil {
@@ -85,8 +85,8 @@ func (r *repository) ExistsNameEmail(ctx context.Context, user *model.UserIdenti
 	return existsCode, nil
 }
 
-func (r *repository) Get(ctx context.Context, username string) (*model.User, error) {
-	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at").
+func (r *repository) Get(ctx context.Context, username string) (*model.UserSpecSerialized, error) {
+	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at", "specialization").
 		From(tableName).
 		Where(sq.Eq{"username": username}).
 		Where("deleted_at IS NULL").
@@ -103,7 +103,7 @@ func (r *repository) Get(ctx context.Context, username string) (*model.User, err
 		QueryRaw: query,
 	}
 
-	var user model.User
+	var user model.UserSpecSerialized
 	if err = r.client.PG().GetContext(ctx, &user, q, v...); err != nil {
 		return nil, err
 	}
@@ -111,8 +111,8 @@ func (r *repository) Get(ctx context.Context, username string) (*model.User, err
 	return &user, nil
 }
 
-func (r *repository) List(ctx context.Context) ([]*model.User, error) {
-	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at").
+func (r *repository) List(ctx context.Context) ([]*model.UserSpecSerialized, error) {
+	builder := sq.Select("username", "email", "password", "role", "created_at", "updated_at", "specialization").
 		From(tableName).
 		Where("deleted_at IS NULL").
 		PlaceholderFormat(sq.Dollar)
@@ -127,7 +127,7 @@ func (r *repository) List(ctx context.Context) ([]*model.User, error) {
 		QueryRaw: query,
 	}
 
-	var users = make([]*model.User, 0)
+	var users = make([]*model.UserSpecSerialized, 0)
 	if err = r.client.PG().ScanAllContext(ctx, &users, q, v...); err != nil {
 		return nil, err
 	}

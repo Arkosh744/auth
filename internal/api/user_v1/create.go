@@ -20,7 +20,7 @@ func (i *Implementation) Create(ctx context.Context, req *desc.CreateRequest) (*
 		return nil, status.Errorf(codes.InvalidArgument, "request validation failed: %s", err)
 	}
 
-	user := converter.ToUser(req)
+	user := converter.ToUserSpec(req)
 	if user.Role == model.RoleUnknown {
 		return nil, status.Errorf(codes.InvalidArgument, "invalid role provided: %v", user.Role)
 	}
@@ -53,10 +53,6 @@ func validateCreateRequest(req *desc.CreateRequest) error {
 
 	if !validator.IsValidEmail(req.GetUser().GetEmail()) {
 		return fmt.Errorf(ErrNotValidEmail)
-	}
-
-	if !validator.IsUsernameValid(req.GetUser().GetUsername()) {
-		return fmt.Errorf(ErrNotValidUsername)
 	}
 
 	return nil

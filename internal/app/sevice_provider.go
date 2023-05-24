@@ -4,12 +4,15 @@ import (
 	"context"
 	"github.com/Arkosh744/auth-service-api/internal/log"
 
+	accessV1 "github.com/Arkosh744/auth-service-api/internal/api/access_v1"
 	authV1 "github.com/Arkosh744/auth-service-api/internal/api/auth_v1"
 	userV1 "github.com/Arkosh744/auth-service-api/internal/api/user_v1"
 	"github.com/Arkosh744/auth-service-api/internal/client/pg"
 	"github.com/Arkosh744/auth-service-api/internal/closer"
 	"github.com/Arkosh744/auth-service-api/internal/config"
+	accessRepo "github.com/Arkosh744/auth-service-api/internal/repo/access"
 	userRepo "github.com/Arkosh744/auth-service-api/internal/repo/user"
+	accessService "github.com/Arkosh744/auth-service-api/internal/service/access"
 	authService "github.com/Arkosh744/auth-service-api/internal/service/auth"
 	userService "github.com/Arkosh744/auth-service-api/internal/service/user"
 	"github.com/jackc/pgx/v4/pgxpool"
@@ -23,13 +26,18 @@ type serviceProvider struct {
 	swaggerConfig config.SwaggerConfig
 	authConfig    config.AuthConfig
 
-	pgClient       pg.Client
-	userRepository userRepo.Repository
-	authService    authService.Service
-	userService    userService.Service
+	pgClient pg.Client
 
-	userImpl *userV1.Implementation
-	authImpl *authV1.Implementation
+	accessRepository accessRepo.Repository
+	userRepository   userRepo.Repository
+
+	accessService accessService.Service
+	authService   authService.Service
+	userService   userService.Service
+
+	accessImpl *accessV1.Implementation
+	userImpl   *userV1.Implementation
+	authImpl   *authV1.Implementation
 }
 
 func newServiceProvider() *serviceProvider {
@@ -166,4 +174,28 @@ func (s *serviceProvider) GetAuthImpl(ctx context.Context) *authV1.Implementatio
 	}
 
 	return s.authImpl
+}
+
+func (s *serviceProvider) GetAccessRepository(ctx context.Context) accessRepo.Repository {
+	if s.accessRepository == nil {
+		s.accessRepository = accessRepo.NewRepository(s.GetPGClient(ctx))
+	}
+
+	return s.accessRepository
+}
+
+func (s *serviceProvider) GetAccessService(ctx context.Context) accessService.Service {
+	if s.accessService == nil {
+		s.accessService = accessService.NewService(s.GetAccessRepository(ctx), s.GetAuthConfig())
+	}
+
+	return s.accessService
+}
+
+func (s *serviceProvider) GetAccessImpl(ctx context.Context) *accessV1.Implementation {
+	if s.accessImpl == nil {
+		s.accessImpl = accessV1.NewImplementation(s.GetAccessService(ctx))
+	}
+
+	return s.accessImpl
 }

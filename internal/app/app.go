@@ -13,6 +13,7 @@ import (
 
 	"github.com/Arkosh744/auth-service-api/internal/closer"
 	"github.com/Arkosh744/auth-service-api/internal/config"
+	descAccessV1 "github.com/Arkosh744/auth-service-api/pkg/access_v1"
 	descAuthV1 "github.com/Arkosh744/auth-service-api/pkg/auth_v1"
 	descUserV1 "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	_ "github.com/Arkosh744/auth-service-api/statik"
@@ -114,6 +115,7 @@ func (app *App) initGrpcServer(ctx context.Context) error {
 
 	descUserV1.RegisterUserServer(app.grpcServer, app.serviceProvider.GetUserImpl(ctx))
 	descAuthV1.RegisterAuthV1Server(app.grpcServer, app.serviceProvider.GetAuthImpl(ctx))
+	descAccessV1.RegisterAccessV1Server(app.grpcServer, app.serviceProvider.GetAccessImpl(ctx))
 
 	return nil
 }

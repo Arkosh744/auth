@@ -9,12 +9,9 @@ service AccessV1  {
 }
 
 message CheckAccessRequest {
-  string token = 1;
-  string resource = 2;
-  string action = 3;
+  string endpoint = 1;
 }
 
 message CheckAccessResponse {
   bool is_allowed = 1;
-  string reason = 2;
 }

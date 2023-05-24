@@ -7,7 +7,7 @@ import (
 )
 
 func (i *Implementation) CheckAccess(ctx context.Context, req *desc.CheckAccessRequest) (*desc.CheckAccessResponse, error) {
-	isAllowed, err := i.accessService.CheckAccess(ctx, req.GetResource())
+	isAllowed, err := i.accessService.CheckAccess(ctx, req.GetEndpoint())
 	if err != nil {
 		return nil, err
 	}

@@ -8,6 +8,7 @@ package access_v1
 
 import (
 	context "context"
+	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -22,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AccessV1Client interface {
-	CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error)
+	CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 }
 
 type accessV1Client struct {
@@ -33,8 +34,8 @@ func NewAccessV1Client(cc grpc.ClientConnInterface) AccessV1Client {
 	return &accessV1Client{cc}
 }
 
-func (c *accessV1Client) CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*CheckAccessResponse, error) {
-	out := new(CheckAccessResponse)
+func (c *accessV1Client) CheckAccess(ctx context.Context, in *CheckAccessRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/access_v1.AccessV1/CheckAccess", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -46,7 +47,7 @@ func (c *accessV1Client) CheckAccess(ctx context.Context, in *CheckAccessRequest
 // All implementations must embed UnimplementedAccessV1Server
 // for forward compatibility
 type AccessV1Server interface {
-	CheckAccess(context.Context, *CheckAccessRequest) (*CheckAccessResponse, error)
+	CheckAccess(context.Context, *CheckAccessRequest) (*empty.Empty, error)
 	mustEmbedUnimplementedAccessV1Server()
 }
 
@@ -54,7 +55,7 @@ type AccessV1Server interface {
 type UnimplementedAccessV1Server struct {
 }
 
-func (UnimplementedAccessV1Server) CheckAccess(context.Context, *CheckAccessRequest) (*CheckAccessResponse, error) {
+func (UnimplementedAccessV1Server) CheckAccess(context.Context, *CheckAccessRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CheckAccess not implemented")
 }
 func (UnimplementedAccessV1Server) mustEmbedUnimplementedAccessV1Server() {}

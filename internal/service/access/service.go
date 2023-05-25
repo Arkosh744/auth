@@ -7,7 +7,7 @@ import (
 )
 
 type Service interface {
-	CheckAccess(ctx context.Context, endpointAddress string) (bool, error)
+	CheckAccess(ctx context.Context, endpointAddress string) error
 }
 
 type service struct {

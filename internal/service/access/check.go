@@ -13,6 +13,8 @@ const authPrefix = "Bearer "
 
 var accessibleRoles map[string]string
 
+var ErrAccessDenied = errors.New("access denied")
+
 func (s *service) CheckAccess(ctx context.Context, endpointAddress string) error {
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
@@ -49,7 +51,7 @@ func (s *service) CheckAccess(ctx context.Context, endpointAddress string) error
 		return nil
 	}
 
-	return errors.New("access denied")
+	return ErrAccessDenied
 }
 
 func (s *service) accessibleRoles(ctx context.Context) (map[string]string, error) {

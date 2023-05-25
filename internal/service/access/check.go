@@ -47,6 +47,8 @@ func (s *service) CheckAccess(ctx context.Context, endpointAddress string) error
 		return nil
 	}
 
+	fmt.Println(role, claims.Role)
+	fmt.Println(role, claims.Role)
 	if role == claims.Role {
 		return nil
 	}

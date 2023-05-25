@@ -9,7 +9,7 @@ create table accesses
 );
 
 insert into accesses (endpoint_address, role)
-values ('/user/v1/list', 'admin');
+values ('/chat_v1.ChatV1/CreateChat', 'admin');
 
 -- +goose Down
 drop table accesses;

@@ -2,13 +2,18 @@ package app
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"fmt"
 	"github.com/Arkosh744/auth-service-api/internal/interceptor"
 	"github.com/Arkosh744/auth-service-api/internal/log"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"io"
 	"net"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/Arkosh744/auth-service-api/internal/closer"
@@ -108,7 +113,29 @@ func (app *App) initServiceProvider(_ context.Context) error {
 }
 
 func (app *App) initGrpcServer(ctx context.Context) error {
+	cert, err := tls.LoadX509KeyPair("./certs/service.crt", "./certs/service.key")
+	if err != nil {
+		return fmt.Errorf("failed to load key pair: %v", err)
+	}
+
+	certPool := x509.NewCertPool()
+	ca, err := os.ReadFile("./certs/ca.crt")
+	if err != nil {
+		return fmt.Errorf("failed to read ca certificate: %v", err)
+	}
+
+	if ok := certPool.AppendCertsFromPEM(ca); !ok {
+		return fmt.Errorf("failed to append certs")
+	}
+
+	creds := credentials.NewTLS(&tls.Config{
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		Certificates: []tls.Certificate{cert},
+		ClientCAs:    certPool,
+	})
+
 	app.grpcServer = grpc.NewServer(
+		grpc.Creds(creds),
 		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
 	)
 	reflection.Register(app.grpcServer)

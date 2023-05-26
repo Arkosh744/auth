@@ -2,10 +2,11 @@ package config
 
 import (
 	"encoding/base64"
-	"github.com/pkg/errors"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 const (

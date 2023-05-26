@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/app"
 	"log"
+
+	"github.com/Arkosh744/auth-service-api/internal/app"
 )
 
 func main() {
@@ -17,5 +18,4 @@ func main() {
 	if err = a.Run(); err != nil {
 		log.Fatalf("failed to run app: %v", err)
 	}
-
 }

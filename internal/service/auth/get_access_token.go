@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+
 	"github.com/Arkosh744/auth-service-api/internal/pkg/token"
 )
 

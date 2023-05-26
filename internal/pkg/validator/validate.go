@@ -5,9 +5,7 @@ import (
 	"unicode"
 )
 
-var (
-	regexEmail = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
-)
+var regexEmail = regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 
 func IsUsernameValid(username string) bool {
 	return len(username) >= 2
@@ -27,7 +25,7 @@ func IsPasswordValid(password string) bool {
 	return len(password) >= 8 && hasUpper && hasLower
 }
 
-func IsPasswordConfirmed(password string, passwordConfirmation string) bool {
+func IsPasswordConfirmed(password, passwordConfirmation string) bool {
 	return password == passwordConfirmation
 }
 

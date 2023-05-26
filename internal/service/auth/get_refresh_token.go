@@ -2,12 +2,13 @@ package auth
 
 import (
 	"context"
+
 	"github.com/Arkosh744/auth-service-api/internal/pkg/encrypt"
 	"github.com/Arkosh744/auth-service-api/internal/pkg/token"
 	"github.com/pkg/errors"
 )
 
-func (s *service) GetRefreshToken(ctx context.Context, username string, password string) (string, error) {
+func (s *service) GetRefreshToken(ctx context.Context, username, password string) (string, error) {
 	// TODO: add cache?
 	userInfo, err := s.userRepository.Get(ctx, username)
 	if err != nil {

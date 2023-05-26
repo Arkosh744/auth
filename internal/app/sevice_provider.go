@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/log"
 
 	accessV1 "github.com/Arkosh744/auth-service-api/internal/api/access_v1"
 	authV1 "github.com/Arkosh744/auth-service-api/internal/api/auth_v1"
@@ -10,6 +9,7 @@ import (
 	"github.com/Arkosh744/auth-service-api/internal/client/pg"
 	"github.com/Arkosh744/auth-service-api/internal/closer"
 	"github.com/Arkosh744/auth-service-api/internal/config"
+	"github.com/Arkosh744/auth-service-api/internal/log"
 	accessRepo "github.com/Arkosh744/auth-service-api/internal/repo/access"
 	userRepo "github.com/Arkosh744/auth-service-api/internal/repo/user"
 	accessService "github.com/Arkosh744/auth-service-api/internal/service/access"

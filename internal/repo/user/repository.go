@@ -127,7 +127,7 @@ func (r *repository) List(ctx context.Context) ([]*model.UserSpecSerialized, err
 		QueryRaw: query,
 	}
 
-	var users = make([]*model.UserSpecSerialized, 0)
+	users := make([]*model.UserSpecSerialized, 0)
 	if err = r.client.PG().ScanAllContext(ctx, &users, q, v...); err != nil {
 		return nil, err
 	}

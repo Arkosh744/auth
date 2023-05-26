@@ -77,20 +77,17 @@ generate-root-key:
 	openssl genrsa -out $(CA_KEY) $(KEY_SIZE)
 
 generate-root-crt:
-	openssl req -x509 -new -nodes -key $(CA_KEY) -$(SHA) -days $(DAYS) -out $(CA_CRT) -config ./certs/root.cnf
+	openssl req -x509 -new -nodes -key $(CA_KEY) -$(SHA) -days $(DAYS) -out $(CA_CRT) -config $(CERTS_DIR)/root.cnf
 
 generate-server-key:
 	openssl genrsa -out $(SERVICE_KEY) $(KEY_SIZE)
 
 generate-server-csr:
-	openssl req -new -key $(SERVICE_KEY) -subj "/CN=localhost" -out $(SERVICE_CSR)
-
-generate-server-csr:
-	openssl req -new -key $(SERVICE_KEY) -out $(SERVICE_CSR) -config ./certs/localhost.cnf
+	openssl req -new -key $(SERVICE_KEY) -out $(SERVICE_CSR) -config $(CERTS_DIR)/localhost.cnf
 
 generate-server-crt:
 	openssl x509 -req -in $(SERVICE_CSR) -CA $(CA_CRT) -CAkey $(CA_KEY) -CAcreateserial -out $(SERVICE_CRT) \
-  -days $(DAYS) -$(SHA) -extfile ./certs/localhost.cnf -extensions req_ext
+  -days $(DAYS) -$(SHA) -extfile $(CERTS_DIR)/localhost.cnf -extensions req_ext
 
 generate-openssl-keys:
 	make generate-root-key

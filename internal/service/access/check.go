@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/Arkosh744/auth-service-api/internal/pkg/token"
 	"google.golang.org/grpc/metadata"
-	"strings"
 )
 
 const authPrefix = "Bearer "
@@ -47,8 +48,6 @@ func (s *service) CheckAccess(ctx context.Context, endpointAddress string) error
 		return nil
 	}
 
-	fmt.Println(role, claims.Role)
-	fmt.Println(role, claims.Role)
 	if role == claims.Role {
 		return nil
 	}

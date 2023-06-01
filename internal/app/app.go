@@ -136,6 +136,7 @@ func (app *App) initGrpcServer(ctx context.Context) error {
 			grpcMiddleware.ChainUnaryServer(
 				interceptor.ValidateInterceptor,
 				interceptor.ErrorCodesInterceptor,
+				interceptor.MetricsInterceptor,
 			),
 		),
 	)
@@ -207,7 +208,7 @@ func (app *App) initPrometheusServer(_ context.Context) error {
 }
 
 func (app *App) runPrometheusServer() error {
-	log.Infof("Prometheus server is running on %s", "localhost:2112")
+	log.Infof("Prometheus server is running on %s", app.serviceProvider.GetPromConfig().GetHost())
 
 	err := app.prometheusServer.ListenAndServe()
 	if err != nil {

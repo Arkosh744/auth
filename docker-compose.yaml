@@ -1,5 +1,9 @@
 version: '3'
 
+volumes:
+  postgres_volume:
+  prometheus_data:
+
 services:
   postgres:
     image: postgres:14.7-alpine3.17
@@ -20,6 +24,6 @@ services:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
 
-volumes:
-  postgres_volume:
-  prometheus_data:
+#   workaound on ubuntu
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -4,13 +4,15 @@ import (
 	"time"
 
 	"github.com/Arkosh744/auth-service-api/internal/model"
+	"github.com/Arkosh744/auth-service-api/internal/sys"
+	"github.com/Arkosh744/auth-service-api/internal/sys/codes"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/pkg/errors"
 )
 
 func GenerateToken(user *model.User, secretKey []byte, duration time.Duration) (string, error) {
 	if user == nil {
-		return "", errors.Errorf("user is not defined")
+		return "", sys.NewCommonError("user is not defined", codes.InvalidArgument)
 	}
 
 	claims := model.UserClaims{

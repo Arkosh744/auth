@@ -115,3 +115,15 @@ vendor-proto:
 			mv vendor.protogen/openapiv2/protoc-gen-openapiv2/options/*.proto vendor.protogen/protoc-gen-openapiv2/options &&\
 			rm -rf vendor.protogen/openapiv2 ;\
 		fi
+
+
+grpc-load-test:
+	ghz \
+		--proto api/user_v1/user.proto \
+		--import-paths=vendor.protogen \
+		--call user_v1.User.List \
+		--data '' \
+		--rps 100 \
+		--total 6000 \
+		--cacert=certs/service.crt \
+		localhost:50051

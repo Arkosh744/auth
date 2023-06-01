@@ -24,6 +24,7 @@ type serviceProvider struct {
 	grpcConfig    config.GRPCConfig
 	httpConfig    config.HTTPConfig
 	swaggerConfig config.SwaggerConfig
+	promConfig    config.PromConfig
 	authConfig    config.AuthConfig
 
 	pgClient pg.Client
@@ -94,6 +95,19 @@ func (s *serviceProvider) GetHTTPConfig() config.HTTPConfig {
 	}
 
 	return s.httpConfig
+}
+
+func (s *serviceProvider) GetPromConfig() config.PromConfig {
+	if s.promConfig == nil {
+		cfg, err := config.NewPromConfig()
+		if err != nil {
+			log.Fatalf("failed to get prom config", zap.Error(err))
+		}
+
+		s.promConfig = cfg
+	}
+
+	return s.promConfig
 }
 
 func (s *serviceProvider) GetSwaggerConfig() config.SwaggerConfig {

@@ -35,7 +35,7 @@ func ToUserSpec(user *desc.CreateRequest) *model.UserSpec {
 		User: model.User{
 			Username: user.GetUser().GetUsername(),
 			Email:    strings.ToLower(strings.TrimSpace(user.GetUser().GetEmail())),
-			Password: user.GetUser().GetUsername(),
+			Password: user.GetPassword(),
 			Role:     ToRole(user.GetUser().GetRole()),
 		},
 	}
@@ -93,7 +93,8 @@ func ToUserGetDesc(user *model.UserSpec) *desc.GetResponse {
 		User: &desc.UserInfo{
 			Username: user.Username,
 			Email:    user.Email,
-			Role:     ToRoleDesc(user.Role)},
+			Role:     ToRoleDesc(user.Role),
+		},
 		CreatedAt: timestamppb.New(user.CreatedAt),
 		UpdatedAt: timestamppb.New(user.UpdatedAt),
 	}

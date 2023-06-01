@@ -1,23 +1,15 @@
 package encrypt
 
 import (
-	"errors"
-
 	"golang.org/x/crypto/bcrypt"
 )
 
-func CheckPassword(hash, password string) error {
-	if password == "" {
-		return errors.New("password cannot be empty")
-	}
+func HashPassword(password string) (string, error) {
+	hashedPasswordBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return string(hashedPasswordBytes), err
+}
 
-	if hash == "" {
-		return errors.New("hash cannot be empty")
-	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)); err != nil {
-		return errors.New("passwords do not match")
-	}
-
-	return nil
+func VerifyPassword(hashedPassword, candidatePassword string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(candidatePassword))
+	return err == nil
 }

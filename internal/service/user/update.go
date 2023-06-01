@@ -2,6 +2,7 @@ package user
 
 import (
 	"context"
+
 	"github.com/Arkosh744/auth-service-api/internal/log"
 
 	"github.com/Arkosh744/auth-service-api/internal/model"

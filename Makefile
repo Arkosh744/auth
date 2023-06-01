@@ -16,6 +16,8 @@ install-go-deps:
 generate:
 	mkdir -p pkg/swagger
 	make generate-user-api
+	make generate-auth-api
+	make generate-access-api
 	statik -src=pkg/swagger -include='*.css,*.html,*.js,*.json,*.png'
 
 generate-user-api:
@@ -25,13 +27,32 @@ generate-user-api:
 	--go_out=pkg/user_v1 --go_opt=paths=source_relative \
 	--plugin=protoc-gen-go=bin/protoc-gen-go \
 	--go-grpc_out=pkg/user_v1 --go-grpc_opt=paths=source_relative \
-	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc api/user_v1/service.proto \
+	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
 	--validate_out lang=go:pkg/user_v1 --validate_opt=paths=source_relative \
 	--plugin=protoc-gen-validate=bin/protoc-gen-validate \
 	--grpc-gateway_out=pkg/user_v1 --grpc-gateway_opt=paths=source_relative \
 	--plugin=protoc-gen-grpc-gateway=bin/protoc-gen-grpc-gateway \
 	--openapiv2_out=allow_merge=true,merge_file_name=api:pkg/swagger \
 	--plugin=protoc-gen-openapiv2=bin/protoc-gen-openapiv2 \
+	api/user_v1/user.proto
+
+generate-auth-api:
+	mkdir -p pkg/auth_v1
+	protoc --proto_path api/auth_v1 \
+	--go_out=pkg/auth_v1 --go_opt=paths=source_relative \
+	--plugin=protoc-gen-go=bin/protoc-gen-go \
+	--go-grpc_out=pkg/auth_v1 --go-grpc_opt=paths=source_relative \
+	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+	api/auth_v1/auth.proto
+
+generate-access-api:
+	mkdir -p pkg/access_v1
+	protoc --proto_path api/access_v1 \
+	--go_out=pkg/access_v1 --go_opt=paths=source_relative \
+	--plugin=protoc-gen-go=bin/protoc-gen-go \
+	--go-grpc_out=pkg/access_v1 --go-grpc_opt=paths=source_relative \
+	--plugin=protoc-gen-go-grpc=bin/protoc-gen-go-grpc \
+	api/access_v1/access.proto
 
 local-migration-status:
 	goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} status -v
@@ -41,6 +62,39 @@ local-migration-up:
 
 local-migration-down:
 	goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} down -v
+
+CERTS_DIR=./certs
+CA_KEY=$(CERTS_DIR)/ca.key
+CA_CRT=$(CERTS_DIR)/ca.crt
+SERVICE_KEY=$(CERTS_DIR)/service.key
+SERVICE_CSR=$(CERTS_DIR)/service.csr
+SERVICE_CRT=$(CERTS_DIR)/service.crt
+KEY_SIZE=4096
+DAYS=1024
+SHA=sha256
+
+generate-root-key:
+	openssl genrsa -out $(CA_KEY) $(KEY_SIZE)
+
+generate-root-crt:
+	openssl req -x509 -new -nodes -key $(CA_KEY) -$(SHA) -days $(DAYS) -out $(CA_CRT) -config $(CERTS_DIR)/root.cnf
+
+generate-server-key:
+	openssl genrsa -out $(SERVICE_KEY) $(KEY_SIZE)
+
+generate-server-csr:
+	openssl req -new -key $(SERVICE_KEY) -out $(SERVICE_CSR) -config $(CERTS_DIR)/localhost.cnf
+
+generate-server-crt:
+	openssl x509 -req -in $(SERVICE_CSR) -CA $(CA_CRT) -CAkey $(CA_KEY) -CAcreateserial -out $(SERVICE_CRT) \
+  -days $(DAYS) -$(SHA) -extfile $(CERTS_DIR)/localhost.cnf -extensions req_ext
+
+generate-openssl-keys:
+	make generate-root-key
+	make generate-root-crt
+	make generate-server-key
+	make generate-server-csr
+	make generate-server-crt
 
 vendor-proto:
 		@if [ ! -d vendor.protogen/validate ]; then \

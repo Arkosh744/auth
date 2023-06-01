@@ -2,18 +2,23 @@ package app
 
 import (
 	"context"
-	"github.com/Arkosh744/auth-service-api/internal/interceptor"
-	"github.com/Arkosh744/auth-service-api/internal/log"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc/credentials/insecure"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"sync"
 
+	"github.com/Arkosh744/auth-service-api/internal/interceptor"
+	"github.com/Arkosh744/auth-service-api/internal/log"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
+
 	"github.com/Arkosh744/auth-service-api/internal/closer"
 	"github.com/Arkosh744/auth-service-api/internal/config"
-	desc "github.com/Arkosh744/auth-service-api/pkg/user_v1"
+	descAccessV1 "github.com/Arkosh744/auth-service-api/pkg/access_v1"
+	descAuthV1 "github.com/Arkosh744/auth-service-api/pkg/auth_v1"
+	descUserV1 "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	_ "github.com/Arkosh744/auth-service-api/statik"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
@@ -106,12 +111,20 @@ func (app *App) initServiceProvider(_ context.Context) error {
 }
 
 func (app *App) initGrpcServer(ctx context.Context) error {
+	creds, err := credentials.NewServerTLSFromFile("./certs/service.crt", "./certs/service.key")
+	if err != nil {
+		return fmt.Errorf("failed to load certificates: %v", err)
+	}
+
 	app.grpcServer = grpc.NewServer(
+		grpc.Creds(creds),
 		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
 	)
 	reflection.Register(app.grpcServer)
 
-	desc.RegisterUserServer(app.grpcServer, app.serviceProvider.GetUserImpl(ctx))
+	descUserV1.RegisterUserServer(app.grpcServer, app.serviceProvider.GetUserImpl(ctx))
+	descAuthV1.RegisterAuthV1Server(app.grpcServer, app.serviceProvider.GetAuthImpl(ctx))
+	descAccessV1.RegisterAccessV1Server(app.grpcServer, app.serviceProvider.GetAccessImpl(ctx))
 
 	return nil
 }
@@ -123,7 +136,7 @@ func (app *App) initHTTPServer(ctx context.Context) error {
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 	}
 
-	err := desc.RegisterUserHandlerFromEndpoint(ctx, mux, app.serviceProvider.GetGRPCConfig().GetHost(), opts)
+	err := descUserV1.RegisterUserHandlerFromEndpoint(ctx, mux, app.serviceProvider.GetGRPCConfig().GetHost(), opts)
 	if err != nil {
 		return err
 	}

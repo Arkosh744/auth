@@ -10,6 +10,7 @@ import (
 	"github.com/Arkosh744/auth-service-api/internal/closer"
 	"github.com/Arkosh744/auth-service-api/internal/config"
 	"github.com/Arkosh744/auth-service-api/internal/log"
+	"github.com/Arkosh744/auth-service-api/internal/rate_limiter"
 	accessRepo "github.com/Arkosh744/auth-service-api/internal/repo/access"
 	userRepo "github.com/Arkosh744/auth-service-api/internal/repo/user"
 	accessService "github.com/Arkosh744/auth-service-api/internal/service/access"
@@ -20,14 +21,16 @@ import (
 )
 
 type serviceProvider struct {
-	pgConfig      config.PGConfig
-	grpcConfig    config.GRPCConfig
-	httpConfig    config.HTTPConfig
-	swaggerConfig config.SwaggerConfig
-	promConfig    config.PromConfig
-	authConfig    config.AuthConfig
+	pgConfig        config.PGConfig
+	grpcConfig      config.GRPCConfig
+	httpConfig      config.HTTPConfig
+	swaggerConfig   config.SwaggerConfig
+	promConfig      config.PromConfig
+	rateLimitConfig config.RateLimitConfig
+	authConfig      config.AuthConfig
 
-	pgClient pg.Client
+	pgClient    pg.Client
+	rateLimiter *rate_limiter.TokenBucketLimiter
 
 	accessRepository accessRepo.Repository
 	userRepository   userRepo.Repository
@@ -56,6 +59,19 @@ func (s *serviceProvider) GetAuthConfig() config.AuthConfig {
 	}
 
 	return s.authConfig
+}
+
+func (s *serviceProvider) GetRateLimitConfig() config.RateLimitConfig {
+	if s.rateLimitConfig == nil {
+		cfg, err := config.NewRateLimitConfig()
+		if err != nil {
+			log.Fatalf("failed to get rate limit config", zap.Error(err))
+		}
+
+		s.rateLimitConfig = cfg
+	}
+
+	return s.rateLimitConfig
 }
 
 func (s *serviceProvider) GetPGConfig() config.PGConfig {
@@ -121,6 +137,17 @@ func (s *serviceProvider) GetSwaggerConfig() config.SwaggerConfig {
 	}
 
 	return s.swaggerConfig
+}
+
+func (s *serviceProvider) GetRateLimiter(ctx context.Context) *rate_limiter.TokenBucketLimiter {
+	if s.rateLimiter == nil {
+		s.rateLimiter = rate_limiter.NewTokenBucketLimiter(
+			ctx,
+			s.GetRateLimitConfig().Limit(),
+			s.GetRateLimitConfig().Period())
+	}
+
+	return s.rateLimiter
 }
 
 func (s *serviceProvider) GetPGClient(ctx context.Context) pg.Client {

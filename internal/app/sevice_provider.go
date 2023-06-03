@@ -17,6 +17,7 @@ import (
 	authService "github.com/Arkosh744/auth-service-api/internal/service/auth"
 	userService "github.com/Arkosh744/auth-service-api/internal/service/user"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/sony/gobreaker"
 	"go.uber.org/zap"
 )
 
@@ -27,10 +28,12 @@ type serviceProvider struct {
 	swaggerConfig   config.SwaggerConfig
 	promConfig      config.PromConfig
 	rateLimitConfig config.RateLimitConfig
+	breakerConfig   config.BreakerConfig
 	authConfig      config.AuthConfig
 
-	pgClient    pg.Client
-	rateLimiter *rate_limiter.TokenBucketLimiter
+	pgClient       pg.Client
+	rateLimiter    *rate_limiter.TokenBucketLimiter
+	circuitBreaker *gobreaker.CircuitBreaker
 
 	accessRepository accessRepo.Repository
 	userRepository   userRepo.Repository
@@ -72,6 +75,19 @@ func (s *serviceProvider) GetRateLimitConfig() config.RateLimitConfig {
 	}
 
 	return s.rateLimitConfig
+}
+
+func (s *serviceProvider) GetBreakerConfig() config.BreakerConfig {
+	if s.breakerConfig == nil {
+		cfg, err := config.NewBreakerConfig()
+		if err != nil {
+			log.Fatalf("failed to get circuit breaker config", zap.Error(err))
+		}
+
+		s.breakerConfig = cfg
+	}
+
+	return s.breakerConfig
 }
 
 func (s *serviceProvider) GetPGConfig() config.PGConfig {
@@ -148,6 +164,26 @@ func (s *serviceProvider) GetRateLimiter(ctx context.Context) *rate_limiter.Toke
 	}
 
 	return s.rateLimiter
+}
+
+func (s *serviceProvider) GetBreaker(_ context.Context) *gobreaker.CircuitBreaker {
+	if s.circuitBreaker == nil {
+		s.circuitBreaker = gobreaker.NewCircuitBreaker(gobreaker.Settings{
+			Name:        "auth-service-api",
+			MaxRequests: uint32(s.GetBreakerConfig().Requests()),
+			Interval:    s.GetBreakerConfig().Interval(),
+			Timeout:     s.GetBreakerConfig().Timeout(),
+			ReadyToTrip: func(counts gobreaker.Counts) bool {
+				// >60% of requests failed => open circuit (no new requests allowed)
+				return float64(counts.TotalFailures)/float64(counts.Requests) > 0.6
+			},
+			OnStateChange: func(name string, from gobreaker.State, to gobreaker.State) {
+				log.Infof("grpc breaker state changed: %s %s -> %s", name, from, to)
+			},
+		})
+	}
+
+	return s.circuitBreaker
 }
 
 func (s *serviceProvider) GetPGClient(ctx context.Context) pg.Client {

@@ -138,6 +138,7 @@ func (app *App) initGrpcServer(ctx context.Context) error {
 				interceptor.ErrorCodesInterceptor,
 				interceptor.MetricsInterceptor,
 				interceptor.NewRateLimiterInterceptor(app.serviceProvider.GetRateLimiter(ctx)).Unary,
+				interceptor.NewCircuitBreakerInterceptor(app.serviceProvider.GetBreaker(ctx)).Unary,
 			),
 		),
 	)

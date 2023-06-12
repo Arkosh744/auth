@@ -19,12 +19,13 @@ func (s *service) Create(ctx context.Context, user *model.UserSpec) error {
 		return sys.NewCommonError("error checking if user credentials exists", codes.Internal)
 	}
 
-	err = validate.Validate(
+	if err = validate.Validate(
 		ctx,
 		checkExists(exists),
-	)
-	if err != nil {
-		return err
+	); err != nil {
+		log.Errorf("error create user: %v", err)
+
+		return sys.NewCommonError(err.Error(), codes.Internal)
 	}
 
 	userSerialized, err := user.ToUserSpecSerialized()

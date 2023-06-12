@@ -17,10 +17,14 @@ func (s *service) Update(ctx context.Context, username string, user *model.Updat
 		return sys.NewCommonError("error checking if user credentials exists", codes.Internal)
 	}
 
-	err = validate.Validate(
+	if err = validate.Validate(
 		ctx,
 		checkExists(exists),
-	)
+	); err != nil {
+		log.Errorf("error update user: %v", err)
+
+		return sys.NewCommonError(err.Error(), codes.Internal)
+	}
 
 	if err = s.repository.Update(ctx, username, user); err != nil {
 		if err == pgx.ErrNoRows {

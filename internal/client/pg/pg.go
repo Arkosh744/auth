@@ -39,11 +39,6 @@ type PG interface {
 	Close() error
 }
 
-type Records struct {
-	Found int32
-	Total int32
-}
-
 func (p *pg) GetContext(ctx context.Context, dest interface{}, q Query, args ...interface{}) error {
 	rows, err := p.QueryContext(ctx, q, args...)
 	if err != nil {

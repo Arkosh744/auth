@@ -8,29 +8,32 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/Arkosh744/auth-service-api/internal/interceptor"
-	"github.com/Arkosh744/auth-service-api/internal/log"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/credentials/insecure"
-
 	"github.com/Arkosh744/auth-service-api/internal/closer"
 	"github.com/Arkosh744/auth-service-api/internal/config"
+	"github.com/Arkosh744/auth-service-api/internal/interceptor"
+	"github.com/Arkosh744/auth-service-api/internal/log"
+	"github.com/Arkosh744/auth-service-api/internal/metric"
 	descAccessV1 "github.com/Arkosh744/auth-service-api/pkg/access_v1"
 	descAuthV1 "github.com/Arkosh744/auth-service-api/pkg/auth_v1"
 	descUserV1 "github.com/Arkosh744/auth-service-api/pkg/user_v1"
 	_ "github.com/Arkosh744/auth-service-api/statik"
+	grpcMiddleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rakyll/statik/fs"
 	"github.com/rs/cors"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
 type App struct {
-	serviceProvider *serviceProvider
-	grpcServer      *grpc.Server
-	httpServer      *http.Server
-	swaggerServer   *http.Server
+	serviceProvider  *serviceProvider
+	grpcServer       *grpc.Server
+	httpServer       *http.Server
+	swaggerServer    *http.Server
+	prometheusServer *http.Server
 }
 
 func NewApp(ctx context.Context) (*App, error) {
@@ -51,7 +54,7 @@ func (app *App) Run() error {
 	}()
 
 	wg := sync.WaitGroup{}
-	wg.Add(3)
+	wg.Add(4)
 
 	go func() {
 		defer wg.Done()
@@ -80,6 +83,15 @@ func (app *App) Run() error {
 		}
 	}()
 
+	go func() {
+		defer wg.Done()
+
+		err := app.runPrometheusServer()
+		if err != nil {
+			log.Fatalf("failed to run prometheus server: %v", err)
+		}
+	}()
+
 	wg.Wait()
 
 	return nil
@@ -88,11 +100,13 @@ func (app *App) Run() error {
 func (app *App) initDeps(ctx context.Context) error {
 	inits := []func(context.Context) error{
 		config.Init,
+		metric.Init,
 		log.InitLogger,
 		app.initServiceProvider,
 		app.initGrpcServer,
 		app.initHTTPServer,
 		app.initSwaggerServer,
+		app.initPrometheusServer,
 	}
 
 	for _, init := range inits {
@@ -118,7 +132,15 @@ func (app *App) initGrpcServer(ctx context.Context) error {
 
 	app.grpcServer = grpc.NewServer(
 		grpc.Creds(creds),
-		grpc.UnaryInterceptor(interceptor.ValidateInterceptor),
+		grpc.UnaryInterceptor(
+			grpcMiddleware.ChainUnaryServer(
+				interceptor.ValidateInterceptor,
+				interceptor.ErrorCodesInterceptor,
+				interceptor.MetricsInterceptor,
+				interceptor.NewRateLimiterInterceptor(app.serviceProvider.GetRateLimiter(ctx)).Unary,
+				interceptor.NewCircuitBreakerInterceptor(app.serviceProvider.GetBreaker(ctx)).Unary,
+			),
+		),
 	)
 	reflection.Register(app.grpcServer)
 
@@ -170,6 +192,29 @@ func (app *App) initSwaggerServer(_ context.Context) error {
 	app.swaggerServer = &http.Server{
 		Addr:    app.serviceProvider.GetSwaggerConfig().GetHost(),
 		Handler: mux,
+	}
+
+	return nil
+}
+
+func (app *App) initPrometheusServer(_ context.Context) error {
+	mux := http.NewServeMux()
+	mux.Handle("/metrics", promhttp.Handler())
+
+	app.prometheusServer = &http.Server{
+		Addr:    app.serviceProvider.GetPromConfig().GetHost(),
+		Handler: mux,
+	}
+
+	return nil
+}
+
+func (app *App) runPrometheusServer() error {
+	log.Infof("Prometheus server is running on %s", app.serviceProvider.GetPromConfig().GetHost())
+
+	err := app.prometheusServer.ListenAndServe()
+	if err != nil {
+		return err
 	}
 
 	return nil

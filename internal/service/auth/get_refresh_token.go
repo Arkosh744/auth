@@ -5,7 +5,8 @@ import (
 
 	"github.com/Arkosh744/auth-service-api/internal/pkg/encrypt"
 	"github.com/Arkosh744/auth-service-api/internal/pkg/token"
-	"github.com/pkg/errors"
+	"github.com/Arkosh744/auth-service-api/internal/sys"
+	"github.com/Arkosh744/auth-service-api/internal/sys/codes"
 )
 
 func (s *service) GetRefreshToken(ctx context.Context, username, password string) (string, error) {
@@ -16,12 +17,12 @@ func (s *service) GetRefreshToken(ctx context.Context, username, password string
 	}
 
 	if !encrypt.VerifyPassword(userInfo.Password, password) {
-		return "", errors.New("invalid password")
+		return "", sys.NewCommonError("invalid password", codes.Aborted)
 	}
 
 	refresh, err := token.GenerateToken(&userInfo.User, s.authConfig.RefreshTokenSecretKey(), s.authConfig.RefreshTokenExpirationMinutes())
 	if err != nil {
-		return "", errors.New("failed to generate token")
+		return "", sys.NewCommonError("failed to generate token", codes.Internal)
 	}
 
 	return refresh, nil
